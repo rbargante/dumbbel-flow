@@ -30,7 +30,10 @@ export function useAppData() {
     setData(prev => {
       const newLastSession = { ...prev.lastSessionByExercise };
       workout.exercises.forEach(ex => {
-        newLastSession[ex.exerciseId] = ex.sets;
+        const doneSets = ex.sets.filter(s => s.done);
+        if (doneSets.length > 0) {
+          newLastSession[ex.exerciseId] = doneSets;
+        }
       });
       return {
         ...prev,
