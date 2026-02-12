@@ -37,6 +37,8 @@ const Index = () => {
       {screen === 'settings' && (
         <SettingsPage
           settings={appData.data.settings}
+          hydrated={appData.hydrated}
+          workoutsCount={appData.data.workouts.length}
           onUpdateSettings={appData.updateSettings}
           onExport={appData.exportData}
           onImport={appData.importData}
