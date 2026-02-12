@@ -1,0 +1,111 @@
+export type WorkoutDay = 'push' | 'pull' | 'legs';
+
+export const DAY_NAMES: Record<WorkoutDay, string> = {
+  push: 'Push Day',
+  pull: 'Pull Day',
+  legs: 'Legs Day',
+};
+
+export const DAY_ORDER: WorkoutDay[] = ['push', 'pull', 'legs'];
+
+export interface Exercise {
+  id: string;
+  name: string;
+  sets: number;
+  repRange: string;
+  isCompound: boolean;
+  day: WorkoutDay;
+}
+
+export interface SetLog {
+  weight: number;
+  reps: number;
+  done: boolean;
+}
+
+export interface ExerciseLog {
+  exerciseId: string;
+  exerciseName: string;
+  sets: SetLog[];
+}
+
+export interface WorkoutLog {
+  id: string;
+  date: string;
+  day: WorkoutDay;
+  exercises: ExerciseLog[];
+}
+
+export interface AppSettings {
+  restTimerEnabled: boolean;
+  soundEnabled: boolean;
+}
+
+export interface AppData {
+  nextDayIndex: number;
+  workouts: WorkoutLog[];
+  lastSessionByExercise: Record<string, SetLog[]>;
+  settings: AppSettings;
+}
+
+export const PELVIC_RESET_EXERCISES = [
+  { id: 'pr1', name: '90/90 Breathing', detail: '5 ciclos' },
+  { id: 'pr2', name: 'Glute Bridge (posterior tilt)', detail: '2×12 com pausa 2s' },
+  { id: 'pr3', name: 'Dead Bug', detail: '2×8 por lado' },
+  { id: 'pr4', name: 'Split Squat leve', detail: '2×8 por lado' },
+];
+
+export const BASE_EXERCISES: Exercise[] = [
+  // Push
+  { id: 'push1', name: 'Flat Dumbbell Bench Press', sets: 4, repRange: '6–8', isCompound: true, day: 'push' },
+  { id: 'push2', name: 'Incline Dumbbell Press', sets: 3, repRange: '8–10', isCompound: true, day: 'push' },
+  { id: 'push3', name: 'Dumbbell Shoulder Press', sets: 3, repRange: '6–8', isCompound: true, day: 'push' },
+  { id: 'push4', name: 'Lateral Raise', sets: 3, repRange: '12–15', isCompound: false, day: 'push' },
+  { id: 'push5', name: 'Overhead Triceps Extension', sets: 3, repRange: '10–12', isCompound: false, day: 'push' },
+
+  // Pull
+  { id: 'pull1', name: 'One Arm Dumbbell Row', sets: 4, repRange: '6–8', isCompound: true, day: 'pull' },
+  { id: 'pull2', name: 'Dumbbell Romanian Deadlift', sets: 4, repRange: '6–8', isCompound: true, day: 'pull' },
+  { id: 'pull3', name: 'Dumbbell Pullover', sets: 3, repRange: '8–10', isCompound: true, day: 'pull' },
+  { id: 'pull4', name: 'Rear Delt Fly', sets: 3, repRange: '12–15', isCompound: false, day: 'pull' },
+  { id: 'pull5', name: 'Dumbbell Curl', sets: 3, repRange: '8–10', isCompound: false, day: 'pull' },
+  { id: 'pull6', name: 'Hammer Curl', sets: 3, repRange: '10–12', isCompound: false, day: 'pull' },
+
+  // Legs
+  { id: 'legs1', name: 'Goblet Squat', sets: 4, repRange: '8–10', isCompound: true, day: 'legs' },
+  { id: 'legs2', name: 'Bulgarian Split Squat', sets: 3, repRange: '8 cada perna', isCompound: true, day: 'legs' },
+  { id: 'legs3', name: 'Dumbbell RDL', sets: 3, repRange: '8–10', isCompound: true, day: 'legs' },
+  { id: 'legs4', name: 'Walking Lunges', sets: 3, repRange: '10 cada perna', isCompound: true, day: 'legs' },
+  { id: 'legs5', name: 'Standing Calf Raise', sets: 4, repRange: '12–15', isCompound: false, day: 'legs' },
+];
+
+export const EXTRA_EXERCISES: Record<WorkoutDay, { id: string; name: string; defaultSets: number; repRange: string; isCompound: boolean }[]> = {
+  push: [
+    { id: 'extra_push1', name: 'Chest Fly', defaultSets: 3, repRange: '10–12', isCompound: false },
+    { id: 'extra_push2', name: 'Front Raise', defaultSets: 3, repRange: '12–15', isCompound: false },
+    { id: 'extra_push3', name: 'Triceps Kickback', defaultSets: 3, repRange: '10–12', isCompound: false },
+    { id: 'extra_push4', name: 'Close Grip Press', defaultSets: 3, repRange: '8–10', isCompound: true },
+  ],
+  pull: [
+    { id: 'extra_pull1', name: 'Shrug', defaultSets: 3, repRange: '12–15', isCompound: false },
+    { id: 'extra_pull2', name: 'Concentration Curl', defaultSets: 3, repRange: '10–12', isCompound: false },
+    { id: 'extra_pull3', name: 'Reverse Fly', defaultSets: 3, repRange: '12–15', isCompound: false },
+    { id: 'extra_pull4', name: 'Face Pull (band)', defaultSets: 3, repRange: '15–20', isCompound: false },
+  ],
+  legs: [
+    { id: 'extra_legs1', name: 'Sumo Squat', defaultSets: 3, repRange: '10–12', isCompound: true },
+    { id: 'extra_legs2', name: 'Step Up', defaultSets: 3, repRange: '10 cada perna', isCompound: true },
+    { id: 'extra_legs3', name: 'Seated Calf Raise', defaultSets: 3, repRange: '15–20', isCompound: false },
+    { id: 'extra_legs4', name: 'Hip Thrust', defaultSets: 3, repRange: '10–12', isCompound: true },
+  ],
+};
+
+export const DEFAULT_APP_DATA: AppData = {
+  nextDayIndex: 0,
+  workouts: [],
+  lastSessionByExercise: {},
+  settings: {
+    restTimerEnabled: true,
+    soundEnabled: true,
+  },
+};
