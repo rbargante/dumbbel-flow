@@ -2,9 +2,12 @@ import { AppSettings, AppData } from '@/data/exercises';
 import { Download, Upload } from 'lucide-react';
 import { useRef } from 'react';
 import { cn } from '@/lib/utils';
+import { getLastSaved } from '@/lib/storage';
 
 interface SettingsPageProps {
   settings: AppSettings;
+  hydrated: boolean;
+  workoutsCount: number;
   onUpdateSettings: (s: Partial<AppSettings>) => void;
   onExport: () => string;
   onImport: (data: AppData) => void;
@@ -30,7 +33,7 @@ function Toggle({ label, checked, onChange }: { label: string; checked: boolean;
   );
 }
 
-export function SettingsPage({ settings, onUpdateSettings, onExport, onImport }: SettingsPageProps) {
+export function SettingsPage({ settings, hydrated, workoutsCount, onUpdateSettings, onExport, onImport }: SettingsPageProps) {
   const fileRef = useRef<HTMLInputElement>(null);
 
   const handleExport = () => {
@@ -91,6 +94,23 @@ export function SettingsPage({ settings, onUpdateSettings, onExport, onImport }:
         Import Backup (JSON)
       </button>
       <input ref={fileRef} type="file" accept=".json" className="hidden" onChange={handleImport} />
+
+      {/* Debug Section */}
+      <div className="bg-card rounded-xl p-4 space-y-2 mt-6">
+        <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Debug</p>
+        <div className="flex justify-between text-sm">
+          <span className="text-muted-foreground">Hydrated</span>
+          <span className="text-foreground font-mono">{String(hydrated)}</span>
+        </div>
+        <div className="flex justify-between text-sm">
+          <span className="text-muted-foreground">Workouts</span>
+          <span className="text-foreground font-mono">{workoutsCount}</span>
+        </div>
+        <div className="flex justify-between text-sm">
+          <span className="text-muted-foreground">Last saved</span>
+          <span className="text-foreground font-mono text-xs">{getLastSaved() || 'never'}</span>
+        </div>
+      </div>
     </div>
   );
 }

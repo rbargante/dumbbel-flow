@@ -1,29 +1,27 @@
-import { useState, useCallback, useEffect } from 'react';
-import { AppData, DEFAULT_APP_DATA, WorkoutLog, SetLog } from '@/data/exercises';
-
-const STORAGE_KEY = 'ricardo-routine-data';
-
-function loadData(): AppData {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return { ...DEFAULT_APP_DATA, ...JSON.parse(raw) };
-  } catch {}
-  return DEFAULT_APP_DATA;
-}
-
-function saveData(data: AppData) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-}
+import { useState, useCallback, useRef } from 'react';
+import { AppData, DEFAULT_APP_DATA, WorkoutLog } from '@/data/exercises';
+import { loadState, saveState } from '@/lib/storage';
 
 export function useAppData() {
-  const [data, setData] = useState<AppData>(loadData);
+  const hydratedRef = useRef(false);
 
-  useEffect(() => {
-    saveData(data);
-  }, [data]);
+  const [data, setData] = useState<AppData>(() => {
+    const persisted = loadState();
+    if (persisted) {
+      hydratedRef.current = true;
+      return persisted;
+    }
+    return DEFAULT_APP_DATA;
+  });
+
+  const hydrated = hydratedRef.current || data !== DEFAULT_APP_DATA;
 
   const advanceDay = useCallback(() => {
-    setData(prev => ({ ...prev, nextDayIndex: (prev.nextDayIndex + 1) % 3 }));
+    setData(prev => {
+      const next = { ...prev, nextDayIndex: (prev.nextDayIndex + 1) % 3 };
+      saveState(next);
+      return next;
+    });
   }, []);
 
   const saveWorkout = useCallback((workout: WorkoutLog) => {
@@ -35,26 +33,34 @@ export function useAppData() {
           newLastSession[ex.exerciseId] = doneSets;
         }
       });
-      return {
+      const next: AppData = {
         ...prev,
         workouts: [workout, ...prev.workouts],
         lastSessionByExercise: newLastSession,
         nextDayIndex: (prev.nextDayIndex + 1) % 3,
       };
+      saveState(next);
+      return next;
     });
   }, []);
 
   const updateSettings = useCallback((settings: Partial<AppData['settings']>) => {
-    setData(prev => ({ ...prev, settings: { ...prev.settings, ...settings } }));
+    setData(prev => {
+      const next = { ...prev, settings: { ...prev.settings, ...settings } };
+      saveState(next);
+      return next;
+    });
   }, []);
 
   const importData = useCallback((imported: AppData) => {
-    setData({ ...DEFAULT_APP_DATA, ...imported });
+    const next = { ...DEFAULT_APP_DATA, ...imported };
+    saveState(next);
+    setData(next);
   }, []);
 
   const exportData = useCallback(() => {
     return JSON.stringify(data, null, 2);
   }, [data]);
 
-  return { data, advanceDay, saveWorkout, updateSettings, importData, exportData };
+  return { data, hydrated, advanceDay, saveWorkout, updateSettings, importData, exportData };
 }
