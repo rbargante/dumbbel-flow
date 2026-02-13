@@ -1,13 +1,13 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import {
   AppData, BASE_EXERCISES, EXTRA_EXERCISES, DAY_NAMES, DAY_ORDER,
-  SetLog, ExerciseLog, WorkoutLog, Exercise,
+  SetLog, WorkoutLog, Exercise,
 } from '@/data/exercises';
 import { ExerciseCard } from '@/components/ExerciseCard';
 import { RestTimerBar } from '@/components/RestTimerBar';
 import { useRestTimer } from '@/hooks/useRestTimer';
 import { saveState } from '@/lib/storage';
-import { Plus } from 'lucide-react';
+import { Plus, Timer, Dumbbell } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface WorkoutPageProps {
@@ -19,6 +19,7 @@ interface ActiveExercise {
   exercise: Exercise;
   isBase: boolean;
   sets: SetLog[];
+  originalId: string; // track original ID for swap & lastSession
 }
 
 function buildInitialSets(exerciseId: string, setsCount: number, lastSession: Record<string, SetLog[]>): SetLog[] {
@@ -36,11 +37,15 @@ export function WorkoutPage({ data, onFinish }: WorkoutPageProps) {
   const baseExercises = BASE_EXERCISES.filter(e => e.day === day);
   const timer = useRestTimer(data.settings.soundEnabled);
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const startTimeRef = useRef(Date.now());
+  const [elapsed, setElapsed] = useState(0);
+  const [skipWarmup, setSkipWarmup] = useState(false);
 
   const [exercises, setExercises] = useState<ActiveExercise[]>(() =>
     baseExercises.map(ex => ({
       exercise: ex,
       isBase: true,
+      originalId: ex.id,
       sets: buildInitialSets(ex.id, ex.sets, data.lastSessionByExercise),
     }))
   );
@@ -48,7 +53,47 @@ export function WorkoutPage({ data, onFinish }: WorkoutPageProps) {
   const [showExtras, setShowExtras] = useState(false);
   const extras = EXTRA_EXERCISES[day];
 
-  // Real-time save: debounce 500ms after any change
+  // Duration timer
+  useEffect(() => {
+    const iv = setInterval(() => {
+      setElapsed(Math.floor((Date.now() - startTimeRef.current) / 1000));
+    }, 1000);
+    return () => clearInterval(iv);
+  }, []);
+
+  const formatDuration = (s: number) => {
+    const m = Math.floor(s / 60);
+    const sec = s % 60;
+    return `${m}:${sec.toString().padStart(2, '0')}`;
+  };
+
+  // Total kg lifted (only completed, non-warmup sets)
+  const totalKg = useMemo(() => {
+    return exercises.reduce((sum, ex) => {
+      return sum + ex.sets.reduce((setSum, set) => {
+        if (set.done && !(skipWarmup && set.isWarmup)) {
+          return setSum + (set.weight * set.reps);
+        }
+        return setSum;
+      }, 0);
+    }, 0);
+  }, [exercises, skipWarmup]);
+
+  // PR detection: check if any exercise has a higher max weight than last session
+  const prExercises = useMemo(() => {
+    const prSet = new Set<string>();
+    exercises.forEach(ex => {
+      const maxWeightNow = Math.max(0, ...ex.sets.filter(s => s.done).map(s => s.weight));
+      const lastSets = data.lastSessionByExercise[ex.originalId];
+      const maxWeightLast = lastSets ? Math.max(0, ...lastSets.map(s => s.weight)) : 0;
+      if (maxWeightNow > 0 && maxWeightNow > maxWeightLast) {
+        prSet.add(ex.exercise.id);
+      }
+    });
+    return prSet;
+  }, [exercises, data.lastSessionByExercise]);
+
+  // Real-time save
   const scheduleRealTimeSave = () => {
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
     saveTimeoutRef.current = setTimeout(() => {
@@ -56,7 +101,6 @@ export function WorkoutPage({ data, onFinish }: WorkoutPageProps) {
     }, 500);
   };
 
-  // Cleanup timeout on unmount
   useEffect(() => {
     return () => {
       if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
@@ -92,6 +136,26 @@ export function WorkoutPage({ data, onFinish }: WorkoutPageProps) {
     scheduleRealTimeSave();
   };
 
+  const handleSwap = (exIdx: number, altId: string, altName: string, altSets: number, altRepRange: string, altIsCompound: boolean) => {
+    setExercises(prev => {
+      const copy = [...prev];
+      const original = copy[exIdx];
+      copy[exIdx] = {
+        ...original,
+        exercise: {
+          ...original.exercise,
+          id: altId,
+          name: altName,
+          sets: altSets,
+          repRange: altRepRange,
+          isCompound: altIsCompound,
+        },
+        sets: buildInitialSets(original.originalId, altSets, data.lastSessionByExercise),
+      };
+      return copy;
+    });
+  };
+
   const addExtra = (extra: typeof extras[0]) => {
     const newEx: ActiveExercise = {
       exercise: {
@@ -103,6 +167,7 @@ export function WorkoutPage({ data, onFinish }: WorkoutPageProps) {
         day,
       },
       isBase: false,
+      originalId: extra.id,
       sets: buildInitialSets(extra.id, extra.defaultSets, data.lastSessionByExercise),
     };
     setExercises(prev => [...prev, newEx]);
@@ -115,12 +180,15 @@ export function WorkoutPage({ data, onFinish }: WorkoutPageProps) {
 
   const finish = () => {
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    const durationSeconds = Math.floor((Date.now() - startTimeRef.current) / 1000);
     const workout: WorkoutLog = {
       id: Date.now().toString(),
       date: new Date().toISOString(),
       day,
+      durationSeconds,
+      totalKg,
       exercises: exercises.map(ex => ({
-        exerciseId: ex.exercise.id,
+        exerciseId: ex.originalId,
         exerciseName: ex.exercise.name,
         sets: ex.sets,
       })),
@@ -131,22 +199,56 @@ export function WorkoutPage({ data, onFinish }: WorkoutPageProps) {
 
   return (
     <div className={cn('px-4 pb-24 max-w-md mx-auto space-y-4', timer.isRunning ? 'pt-16' : 'pt-6')}>
-      <RestTimerBar secondsLeft={timer.secondsLeft} onStop={timer.stop} />
+      <RestTimerBar
+        secondsLeft={timer.secondsLeft}
+        totalSeconds={timer.totalSeconds}
+        onStop={timer.stop}
+        onAdjust={timer.adjust}
+      />
 
-      <h1 className="text-2xl font-black text-foreground">{DAY_NAMES[day]}</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-black text-foreground">{DAY_NAMES[day]}</h1>
+      </div>
+
+      {/* Stats bar */}
+      <div className="flex items-center gap-4 text-sm">
+        <div className="flex items-center gap-1.5 text-muted-foreground">
+          <Timer size={14} className="text-primary" />
+          <span className="tabular-nums font-medium text-foreground">{formatDuration(elapsed)}</span>
+        </div>
+        <div className="flex items-center gap-1.5 text-muted-foreground">
+          <Dumbbell size={14} className="text-primary" />
+          <span className="tabular-nums font-medium text-foreground">{totalKg.toLocaleString()} kg</span>
+        </div>
+        <button
+          onClick={() => setSkipWarmup(!skipWarmup)}
+          className={cn(
+            'ml-auto text-xs px-2 py-1 rounded-md transition-colors',
+            skipWarmup ? 'bg-primary text-primary-foreground' : 'bg-secondary text-muted-foreground'
+          )}
+        >
+          Skip warmup
+        </button>
+      </div>
 
       {exercises.map((ex, i) => (
         <ExerciseCard
           key={ex.exercise.id}
           name={ex.exercise.name}
+          exerciseId={ex.originalId}
           setsCount={ex.exercise.sets}
           repRange={ex.exercise.repRange}
-          lastSession={data.lastSessionByExercise[ex.exercise.id]}
+          lastSession={data.lastSessionByExercise[ex.originalId]}
           currentSets={ex.sets}
           onSetChange={(si, f, v) => handleSetChange(i, si, f, v)}
           onSetDone={(si) => handleSetDone(i, si)}
           isBase={ex.isBase}
           onRemove={ex.isBase ? undefined : () => removeExercise(i)}
+          onSwap={(altId, altName, altSets, altRepRange, altIsCompound) =>
+            handleSwap(i, altId, altName, altSets, altRepRange, altIsCompound)
+          }
+          isPR={prExercises.has(ex.exercise.id)}
+          mediaUrl={ex.exercise.mediaUrl}
         />
       ))}
 

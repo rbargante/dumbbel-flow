@@ -15,12 +15,14 @@ export interface Exercise {
   repRange: string;
   isCompound: boolean;
   day: WorkoutDay;
+  mediaUrl?: string;
 }
 
 export interface SetLog {
   weight: number;
   reps: number;
   done: boolean;
+  isWarmup?: boolean;
 }
 
 export interface ExerciseLog {
@@ -34,6 +36,8 @@ export interface WorkoutLog {
   date: string;
   day: WorkoutDay;
   exercises: ExerciseLog[];
+  durationSeconds?: number;
+  totalKg?: number;
 }
 
 export interface AppSettings {
@@ -98,6 +102,60 @@ export const EXTRA_EXERCISES: Record<WorkoutDay, { id: string; name: string; def
     { id: 'extra_legs2', name: 'Step Up', defaultSets: 3, repRange: '10 cada perna', isCompound: true },
     { id: 'extra_legs3', name: 'Seated Calf Raise', defaultSets: 3, repRange: '15–20', isCompound: false },
     { id: 'extra_legs4', name: 'Hip Thrust', defaultSets: 3, repRange: '10–12', isCompound: true },
+  ],
+};
+
+// Exercise equivalents for swap feature
+export const EXERCISE_EQUIVALENTS: Record<string, { id: string; name: string; sets: number; repRange: string; isCompound: boolean }[]> = {
+  push1: [
+    { id: 'push1_alt1', name: 'Floor Dumbbell Press', sets: 4, repRange: '6–8', isCompound: true },
+  ],
+  push2: [
+    { id: 'push2_alt1', name: 'Decline Dumbbell Press', sets: 3, repRange: '8–10', isCompound: true },
+  ],
+  push3: [
+    { id: 'push3_alt1', name: 'Arnold Press', sets: 3, repRange: '6–8', isCompound: true },
+  ],
+  push4: [
+    { id: 'push4_alt1', name: 'Front Raise', sets: 3, repRange: '12–15', isCompound: false },
+    { id: 'push4_alt2', name: 'Cable Lateral Raise', sets: 3, repRange: '12–15', isCompound: false },
+  ],
+  push5: [
+    { id: 'push5_alt1', name: 'Triceps Kickback', sets: 3, repRange: '10–12', isCompound: false },
+    { id: 'push5_alt2', name: 'Diamond Push-Up', sets: 3, repRange: '10–15', isCompound: false },
+  ],
+  pull1: [
+    { id: 'pull1_alt1', name: 'Bent Over Dumbbell Row', sets: 4, repRange: '6–8', isCompound: true },
+  ],
+  pull2: [
+    { id: 'pull2_alt1', name: 'Stiff Leg Deadlift', sets: 4, repRange: '6–8', isCompound: true },
+  ],
+  pull3: [
+    { id: 'pull3_alt1', name: 'Chest Supported Row', sets: 3, repRange: '8–10', isCompound: true },
+  ],
+  pull4: [
+    { id: 'pull4_alt1', name: 'Band Pull-Apart', sets: 3, repRange: '15–20', isCompound: false },
+  ],
+  pull5: [
+    { id: 'pull5_alt1', name: 'Concentration Curl', sets: 3, repRange: '8–10', isCompound: false },
+  ],
+  pull6: [
+    { id: 'pull6_alt1', name: 'Cross Body Curl', sets: 3, repRange: '10–12', isCompound: false },
+  ],
+  legs1: [
+    { id: 'legs1_alt1', name: 'Sumo Squat', sets: 4, repRange: '8–10', isCompound: true },
+  ],
+  legs2: [
+    { id: 'legs2_alt1', name: 'Reverse Lunge', sets: 3, repRange: '8 cada perna', isCompound: true },
+  ],
+  legs3: [
+    { id: 'legs3_alt1', name: 'Single Leg RDL', sets: 3, repRange: '8–10', isCompound: true },
+  ],
+  legs4: [
+    { id: 'legs4_alt1', name: 'Step Up', sets: 3, repRange: '10 cada perna', isCompound: true },
+  ],
+  legs5: [
+    { id: 'legs5_alt1', name: 'Seated Calf Raise', sets: 4, repRange: '15–20', isCompound: false },
   ],
 };
 

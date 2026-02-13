@@ -60,6 +60,8 @@ export function HistoryPage({ workouts }: HistoryPageProps) {
               <p className="font-bold text-foreground">{DAY_NAMES[w.day]}</p>
               <p className="text-sm text-muted-foreground">
                 {new Date(w.date).toLocaleDateString('pt-PT', { day: 'numeric', month: 'short', year: 'numeric' })}
+                {w.durationSeconds != null && ` · ${Math.floor(w.durationSeconds / 60)}min`}
+                {w.totalKg != null && ` · ${w.totalKg.toLocaleString()}kg`}
               </p>
             </div>
             <ChevronRight className="text-muted-foreground" size={20} />
