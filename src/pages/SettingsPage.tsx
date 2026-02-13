@@ -78,6 +78,12 @@ export function SettingsPage({ settings, hydrated, workoutsCount, onUpdateSettin
         onChange={v => onUpdateSettings({ soundEnabled: v })}
       />
 
+      <Toggle
+        label="Require Pelvic Reset"
+        checked={settings.requirePelvicReset}
+        onChange={v => onUpdateSettings({ requirePelvicReset: v })}
+      />
+
       <button
         onClick={handleExport}
         className="w-full bg-card rounded-xl p-4 flex items-center gap-3 text-foreground font-medium"

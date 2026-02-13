@@ -39,6 +39,7 @@ export interface WorkoutLog {
 export interface AppSettings {
   restTimerEnabled: boolean;
   soundEnabled: boolean;
+  requirePelvicReset: boolean;
 }
 
 export interface AppData {
@@ -107,5 +108,6 @@ export const DEFAULT_APP_DATA: AppData = {
   settings: {
     restTimerEnabled: true,
     soundEnabled: true,
+    requirePelvicReset: true,
   },
 };

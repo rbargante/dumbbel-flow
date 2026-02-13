@@ -54,18 +54,27 @@ export function PelvicResetPage({ onStart, onBack }: PelvicResetPageProps) {
         ))}
       </div>
 
-      <button
-        onClick={onStart}
-        disabled={!allDone}
-        className={cn(
-          'w-full font-bold text-lg py-4 rounded-xl transition-all',
-          allDone
-            ? 'bg-primary text-primary-foreground active:scale-[0.98]'
-            : 'bg-secondary text-muted-foreground cursor-not-allowed'
-        )}
-      >
-        START MAIN WORKOUT
-      </button>
+      <div className="space-y-3">
+        <button
+          onClick={onStart}
+          disabled={!allDone}
+          className={cn(
+            'w-full font-bold text-lg py-4 rounded-xl transition-all',
+            allDone
+              ? 'bg-primary text-primary-foreground active:scale-[0.98]'
+              : 'bg-secondary text-muted-foreground cursor-not-allowed'
+          )}
+        >
+          START MAIN WORKOUT
+        </button>
+
+        <button
+          onClick={onStart}
+          className="w-full text-center text-sm text-muted-foreground py-3 font-medium"
+        >
+          Skip Warmup
+        </button>
+      </div>
     </div>
   );
 }
