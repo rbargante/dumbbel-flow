@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { SetLog, EXERCISE_EQUIVALENTS } from '@/data/exercises';
-import { Minus, Plus, X, RefreshCw, Trophy, Image } from 'lucide-react';
+import { Minus, Plus, X, RefreshCw, Trophy, Image, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface ExerciseCardProps {
@@ -19,30 +19,48 @@ interface ExerciseCardProps {
   mediaUrl?: string;
 }
 
+const WEIGHT_PICKS = [2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32];
+
 export function ExerciseCard({
   name, exerciseId, setsCount, repRange, lastSession, currentSets, onSetChange, onSetDone, isBase, onRemove, onSwap, isPR, mediaUrl,
 }: ExerciseCardProps) {
   const [showSwap, setShowSwap] = useState(false);
   const [showMedia, setShowMedia] = useState(false);
-  const [editingSet, setEditingSet] = useState<number | null>(null);
-  const [editingField, setEditingField] = useState<'weight' | 'reps' | null>(null);
+  const [editingWeightSet, setEditingWeightSet] = useState<number | null>(null);
+  const [amrapSet, setAmrapSet] = useState<number | null>(null);
+  const [amrapReps, setAmrapReps] = useState(0);
 
   const equivalents = EXERCISE_EQUIVALENTS[exerciseId] || [];
 
-  // Use the weight from the first set as the "global" weight display
-  const currentWeight = currentSets[0]?.weight ?? 0;
-
-  const adjustWeightAll = (delta: number) => {
-    currentSets.forEach((set, i) => {
-      if (!set.done) {
-        onSetChange(i, 'weight', Math.max(0, Math.min(32, set.weight + delta)));
-      }
-    });
+  // Check if repRange indicates AMRAP (contains '+' like '6-8+' or 'AMRAP')
+  const isAmrap = (setIdx: number) => {
+    // Last set is AMRAP if repRange contains '+'
+    return repRange.includes('+') && setIdx === currentSets.length - 1;
   };
 
-  const adjustWeightSingle = (setIdx: number, delta: number) => {
-    const newVal = Math.max(0, Math.min(32, currentSets[setIdx].weight + delta));
-    onSetChange(setIdx, 'weight', newVal);
+  const handleCircleTap = (i: number) => {
+    const set = currentSets[i];
+    if (set.done) {
+      // Untoggle
+      onSetDone(i);
+      return;
+    }
+    if (isAmrap(i)) {
+      // Open AMRAP modal
+      setAmrapReps(set.reps || 8);
+      setAmrapSet(i);
+    } else {
+      onSetDone(i);
+    }
+  };
+
+  const confirmAmrap = () => {
+    if (amrapSet !== null) {
+      onSetChange(amrapSet, 'reps', amrapReps);
+      // Small delay to ensure state updates then mark done
+      setTimeout(() => onSetDone(amrapSet), 50);
+      setAmrapSet(null);
+    }
   };
 
   return (
@@ -106,126 +124,124 @@ export function ExerciseCard({
         </div>
       )}
 
-      {/* Weight control (global) */}
-      <div className="flex items-center justify-center gap-3">
-        <button
-          onClick={() => adjustWeightAll(-2)}
-          className="w-10 h-10 rounded-full bg-secondary text-foreground flex items-center justify-center active:bg-primary/30 transition-colors"
-        >
-          <Minus size={18} />
-        </button>
-        <span className="text-2xl font-black text-foreground tabular-nums min-w-[80px] text-center">
-          {currentWeight}<span className="text-sm text-muted-foreground ml-1">kg</span>
-        </span>
-        <button
-          onClick={() => adjustWeightAll(2)}
-          className="w-10 h-10 rounded-full bg-secondary text-foreground flex items-center justify-center active:bg-primary/30 transition-colors"
-        >
-          <Plus size={18} />
-        </button>
-      </div>
-
-      {/* Large set circles */}
-      <div className="flex items-center justify-center gap-3 flex-wrap">
+      {/* Set circles row — reps inside, weight below */}
+      <div className="flex items-start justify-center gap-4 flex-wrap">
         {currentSets.map((set, i) => (
           <div key={i} className="flex flex-col items-center gap-1">
+            {/* Circle */}
             <button
-              onClick={() => {
-                if (editingSet === i) {
-                  setEditingSet(null);
-                  setEditingField(null);
-                } else {
-                  onSetDone(i);
-                }
-              }}
+              onClick={() => handleCircleTap(i)}
               className={cn(
-                'w-14 h-14 rounded-full flex items-center justify-center transition-all text-lg font-black border-2',
+                'w-14 h-14 rounded-full flex items-center justify-center transition-all border-2',
                 set.done
-                  ? 'bg-primary border-primary text-primary-foreground'
-                  : 'bg-transparent border-muted-foreground/40 text-muted-foreground'
+                  ? 'bg-primary border-primary'
+                  : 'bg-transparent border-muted-foreground/40'
               )}
-            >
-              {set.done ? '✓' : i + 1}
-            </button>
-            {/* Info below circle */}
-            <button
-              onClick={() => {
-                setEditingSet(editingSet === i ? null : i);
-                setEditingField(null);
-              }}
-              className="text-xs text-muted-foreground text-center leading-tight"
             >
               {set.done ? (
-                <span className="text-primary font-semibold">{set.weight}kg×{set.reps}</span>
+                <Check size={24} className="text-primary-foreground" strokeWidth={3} />
               ) : (
-                <span>{set.weight > 0 ? `${set.weight}kg` : '—'}</span>
+                <span className="text-lg font-black text-foreground">{set.reps || '—'}</span>
               )}
+            </button>
+
+            {/* Per-set weight below circle — tappable to edit */}
+            <button
+              onClick={() => setEditingWeightSet(editingWeightSet === i ? null : i)}
+              className={cn(
+                'text-xs font-medium text-center leading-tight min-w-[40px] py-0.5 rounded',
+                editingWeightSet === i ? 'bg-primary/20 text-primary' : 'text-muted-foreground'
+              )}
+            >
+              {set.weight > 0 ? `${set.weight}kg` : '—'}
             </button>
           </div>
         ))}
       </div>
 
-      {/* Per-set editor (shown when tapping info below circle) */}
-      {editingSet !== null && (
+      {/* Per-set weight editor */}
+      {editingWeightSet !== null && (
         <div className="bg-secondary rounded-lg p-3 space-y-3">
           <p className="text-xs text-muted-foreground font-semibold uppercase text-center">
-            Set {editingSet + 1}
+            Set {editingWeightSet + 1} — Weight
           </p>
 
-          {/* Weight for this set */}
-          <div className="flex items-center justify-center gap-2">
-            <span className="text-xs text-muted-foreground w-12">Weight</span>
+          {/* +/- 2kg stepper */}
+          <div className="flex items-center justify-center gap-3">
             <button
-              onClick={() => adjustWeightSingle(editingSet, -2)}
-              className="w-8 h-8 rounded-full bg-card text-foreground flex items-center justify-center"
+              onClick={() => onSetChange(editingWeightSet, 'weight', Math.max(0, currentSets[editingWeightSet].weight - 2))}
+              className="w-10 h-10 rounded-full bg-card text-foreground flex items-center justify-center active:bg-primary/30"
             >
-              <Minus size={14} />
+              <Minus size={18} />
             </button>
-            <input
-              type="number"
-              inputMode="decimal"
-              value={currentSets[editingSet].weight || ''}
-              onChange={e => onSetChange(editingSet, 'weight', Math.min(32, parseFloat(e.target.value) || 0))}
-              className="bg-card text-foreground text-center rounded-md px-1 py-1 text-sm w-16 outline-none focus:ring-1 focus:ring-primary"
-            />
+            <span className="text-2xl font-black text-foreground tabular-nums min-w-[70px] text-center">
+              {currentSets[editingWeightSet].weight}<span className="text-sm text-muted-foreground ml-1">kg</span>
+            </span>
             <button
-              onClick={() => adjustWeightSingle(editingSet, 2)}
-              className="w-8 h-8 rounded-full bg-card text-foreground flex items-center justify-center"
+              onClick={() => onSetChange(editingWeightSet, 'weight', Math.min(32, currentSets[editingWeightSet].weight + 2))}
+              className="w-10 h-10 rounded-full bg-card text-foreground flex items-center justify-center active:bg-primary/30"
             >
-              <Plus size={14} />
+              <Plus size={18} />
             </button>
           </div>
 
-          {/* Reps for this set */}
-          <div className="flex items-center justify-center gap-2">
-            <span className="text-xs text-muted-foreground w-12">Reps</span>
-            <button
-              onClick={() => onSetChange(editingSet, 'reps', Math.max(0, currentSets[editingSet].reps - 1))}
-              className="w-8 h-8 rounded-full bg-card text-foreground flex items-center justify-center"
-            >
-              <Minus size={14} />
-            </button>
-            <input
-              type="number"
-              inputMode="numeric"
-              value={currentSets[editingSet].reps || ''}
-              onChange={e => onSetChange(editingSet, 'reps', parseInt(e.target.value) || 0)}
-              className="bg-card text-foreground text-center rounded-md px-1 py-1 text-sm w-16 outline-none focus:ring-1 focus:ring-primary"
-            />
-            <button
-              onClick={() => onSetChange(editingSet, 'reps', currentSets[editingSet].reps + 1)}
-              className="w-8 h-8 rounded-full bg-card text-foreground flex items-center justify-center"
-            >
-              <Plus size={14} />
-            </button>
+          {/* Quick picks grid */}
+          <div className="grid grid-cols-8 gap-1">
+            {WEIGHT_PICKS.map(w => (
+              <button
+                key={w}
+                onClick={() => onSetChange(editingWeightSet, 'weight', w)}
+                className={cn(
+                  'py-1.5 rounded text-xs font-bold transition-colors',
+                  currentSets[editingWeightSet].weight === w
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-card text-foreground'
+                )}
+              >
+                {w}
+              </button>
+            ))}
           </div>
 
           <button
-            onClick={() => { setEditingSet(null); setEditingField(null); }}
+            onClick={() => setEditingWeightSet(null)}
             className="w-full text-center text-xs text-muted-foreground py-1"
           >
             Done
           </button>
+        </div>
+      )}
+
+      {/* AMRAP Modal */}
+      {amrapSet !== null && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70" onClick={() => setAmrapSet(null)}>
+          <div className="bg-card rounded-xl p-6 w-72 space-y-4" onClick={e => e.stopPropagation()}>
+            <h3 className="text-lg font-black text-foreground text-center">AMRAP</h3>
+            <p className="text-sm text-muted-foreground text-center">Enter reps achieved</p>
+            <div className="flex items-center justify-center gap-4">
+              <button
+                onClick={() => setAmrapReps(Math.max(1, amrapReps - 1))}
+                className="w-12 h-12 rounded-full bg-secondary text-foreground flex items-center justify-center"
+              >
+                <Minus size={20} />
+              </button>
+              <span className="text-4xl font-black text-foreground tabular-nums min-w-[60px] text-center">
+                {amrapReps}
+              </span>
+              <button
+                onClick={() => setAmrapReps(amrapReps + 1)}
+                className="w-12 h-12 rounded-full bg-secondary text-foreground flex items-center justify-center"
+              >
+                <Plus size={20} />
+              </button>
+            </div>
+            <button
+              onClick={confirmAmrap}
+              className="w-full bg-primary text-primary-foreground font-bold py-3 rounded-lg text-lg"
+            >
+              OK
+            </button>
+          </div>
         </div>
       )}
 
