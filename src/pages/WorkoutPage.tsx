@@ -28,7 +28,7 @@ function buildInitialSets(exerciseId: string, setsCount: number, lastSession: Re
     if (last && last[i]) {
       return { weight: last[i].weight, reps: last[i].reps, done: false };
     }
-    return { weight: 0, reps: 0, done: false };
+    return { weight: 0, reps: 5, done: false };
   });
 }
 
@@ -152,7 +152,7 @@ export function WorkoutPage({ data, onFinish }: WorkoutPageProps) {
       } else {
         // Add new sets, copying last known weight
         const lastWeight = oldSets.length > 0 ? oldSets[oldSets.length - 1].weight : 0;
-        const lastReps = oldSets.length > 0 ? oldSets[oldSets.length - 1].reps : 0;
+        const lastReps = oldSets.length > 0 ? oldSets[oldSets.length - 1].reps : 5;
         const newSets = Array.from({ length: newCount - oldSets.length }, () => ({
           weight: lastWeight,
           reps: lastReps,
