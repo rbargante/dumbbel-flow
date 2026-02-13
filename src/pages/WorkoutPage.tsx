@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   AppData, BASE_EXERCISES, EXTRA_EXERCISES, DAY_NAMES, DAY_ORDER,
   SetLog, ExerciseLog, WorkoutLog, Exercise,
@@ -6,6 +6,7 @@ import {
 import { ExerciseCard } from '@/components/ExerciseCard';
 import { RestTimerBar } from '@/components/RestTimerBar';
 import { useRestTimer } from '@/hooks/useRestTimer';
+import { saveState } from '@/lib/storage';
 import { Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -20,21 +21,47 @@ interface ActiveExercise {
   sets: SetLog[];
 }
 
+function buildInitialSets(exerciseId: string, setsCount: number, lastSession: Record<string, SetLog[]>): SetLog[] {
+  const last = lastSession[exerciseId];
+  return Array.from({ length: setsCount }, (_, i) => {
+    if (last && last[i]) {
+      return { weight: last[i].weight, reps: last[i].reps, done: false };
+    }
+    return { weight: 0, reps: 0, done: false };
+  });
+}
+
 export function WorkoutPage({ data, onFinish }: WorkoutPageProps) {
   const day = DAY_ORDER[data.nextDayIndex];
   const baseExercises = BASE_EXERCISES.filter(e => e.day === day);
   const timer = useRestTimer(data.settings.soundEnabled);
+  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [exercises, setExercises] = useState<ActiveExercise[]>(() =>
     baseExercises.map(ex => ({
       exercise: ex,
       isBase: true,
-      sets: Array.from({ length: ex.sets }, () => ({ weight: 0, reps: 0, done: false })),
+      sets: buildInitialSets(ex.id, ex.sets, data.lastSessionByExercise),
     }))
   );
 
   const [showExtras, setShowExtras] = useState(false);
   const extras = EXTRA_EXERCISES[day];
+
+  // Real-time save: debounce 500ms after any change
+  const scheduleRealTimeSave = () => {
+    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    saveTimeoutRef.current = setTimeout(() => {
+      saveState(data);
+    }, 500);
+  };
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    };
+  }, []);
 
   const handleSetChange = (exIdx: number, setIdx: number, field: 'weight' | 'reps', value: number) => {
     setExercises(prev => {
@@ -44,6 +71,7 @@ export function WorkoutPage({ data, onFinish }: WorkoutPageProps) {
       copy[exIdx] = ex;
       return copy;
     });
+    scheduleRealTimeSave();
   };
 
   const handleSetDone = (exIdx: number, setIdx: number) => {
@@ -54,7 +82,6 @@ export function WorkoutPage({ data, onFinish }: WorkoutPageProps) {
       ex.sets[setIdx] = { ...ex.sets[setIdx], done: !wasDone };
       copy[exIdx] = ex;
 
-      // Start rest timer if marking as done and timer enabled
       if (!wasDone && data.settings.restTimerEnabled) {
         const seconds = copy[exIdx].exercise.isCompound ? 90 : 60;
         timer.start(seconds);
@@ -62,6 +89,7 @@ export function WorkoutPage({ data, onFinish }: WorkoutPageProps) {
 
       return copy;
     });
+    scheduleRealTimeSave();
   };
 
   const addExtra = (extra: typeof extras[0]) => {
@@ -75,7 +103,7 @@ export function WorkoutPage({ data, onFinish }: WorkoutPageProps) {
         day,
       },
       isBase: false,
-      sets: Array.from({ length: extra.defaultSets }, () => ({ weight: 0, reps: 0, done: false })),
+      sets: buildInitialSets(extra.id, extra.defaultSets, data.lastSessionByExercise),
     };
     setExercises(prev => [...prev, newEx]);
     setShowExtras(false);
@@ -86,6 +114,7 @@ export function WorkoutPage({ data, onFinish }: WorkoutPageProps) {
   };
 
   const finish = () => {
+    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
     const workout: WorkoutLog = {
       id: Date.now().toString(),
       date: new Date().toISOString(),
