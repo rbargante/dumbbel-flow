@@ -143,11 +143,7 @@ export function WorkoutPage({ data, onFinish }: WorkoutPageProps) {
       const oldSets = [...ex.sets];
 
       if (newCount < oldSets.length) {
-        // Confirm removing last sets (keep first N)
-        const hasDoneData = oldSets.slice(newCount).some(s => s.done || s.weight > 0 || s.reps > 0);
-        if (hasDoneData && !window.confirm(`Remove last ${oldSets.length - newCount} set(s)? Data will be lost.`)) {
-          return prev;
-        }
+        // Remove last sets
         ex.sets = oldSets.slice(0, newCount);
       } else {
         // Add new sets, copying last known weight
