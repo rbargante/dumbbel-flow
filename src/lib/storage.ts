@@ -1,10 +1,24 @@
 import { AppData, DEFAULT_APP_DATA } from '@/data/exercises';
 
-const KEY = 'ricardo_routine_state_v1';
+const KEY = 'ricardo_routine_v2';
+const OLD_KEY = 'ricardo_routine_state_v1';
 
 export function loadState(): AppData | null {
   try {
-    const raw = localStorage.getItem(KEY);
+    // Try new key first
+    let raw = localStorage.getItem(KEY);
+    
+    // Migrate from old key if new key doesn't exist
+    if (!raw) {
+      raw = localStorage.getItem(OLD_KEY);
+      if (raw) {
+        // Migrate: save under new key and remove old
+        localStorage.setItem(KEY, raw);
+        localStorage.removeItem(OLD_KEY);
+        localStorage.removeItem(OLD_KEY + '_last_saved');
+      }
+    }
+    
     if (!raw) return null;
     const parsed = JSON.parse(raw);
     if (parsed && typeof parsed === 'object' && 'nextDayIndex' in parsed) {

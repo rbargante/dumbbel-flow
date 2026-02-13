@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef } from 'react';
-import { AppData, DEFAULT_APP_DATA, WorkoutLog } from '@/data/exercises';
+import { AppData, DEFAULT_APP_DATA, WorkoutLog, ExerciseLog } from '@/data/exercises';
 import { loadState, saveState } from '@/lib/storage';
 
 export function useAppData() {
@@ -44,6 +44,18 @@ export function useAppData() {
     });
   }, []);
 
+  // Save current workout progress in real-time (updates lastSession live)
+  const saveProgress = useCallback((exercises: ExerciseLog[]) => {
+    setData(prev => {
+      const newLastSession = { ...prev.lastSessionByExercise };
+      // Don't update lastSession here - only on finish
+      // Just persist current state
+      const next = { ...prev };
+      saveState(next);
+      return prev; // No state change needed, just persist
+    });
+  }, []);
+
   const updateSettings = useCallback((settings: Partial<AppData['settings']>) => {
     setData(prev => {
       const next = { ...prev, settings: { ...prev.settings, ...settings } };
@@ -62,5 +74,5 @@ export function useAppData() {
     return JSON.stringify(data, null, 2);
   }, [data]);
 
-  return { data, hydrated, advanceDay, saveWorkout, updateSettings, importData, exportData };
+  return { data, hydrated, advanceDay, saveWorkout, saveProgress, updateSettings, importData, exportData };
 }
