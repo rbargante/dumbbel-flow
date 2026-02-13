@@ -1,4 +1,4 @@
-import { AppData, DEFAULT_APP_DATA } from '@/data/exercises';
+import { AppData, DEFAULT_APP_DATA, DEFAULT_PROGRAMS } from '@/data/exercises';
 
 const KEY = 'ricardo_routine_v2';
 const OLD_KEY = 'ricardo_routine_state_v1';
@@ -22,7 +22,12 @@ export function loadState(): AppData | null {
     if (!raw) return null;
     const parsed = JSON.parse(raw);
     if (parsed && typeof parsed === 'object' && 'nextDayIndex' in parsed) {
-      return { ...DEFAULT_APP_DATA, ...parsed } as AppData;
+      const data = { ...DEFAULT_APP_DATA, ...parsed } as AppData;
+      // Ensure programs array exists for legacy data
+      if (!data.programs || data.programs.length === 0) {
+        data.programs = DEFAULT_PROGRAMS;
+      }
+      return data;
     }
     return null;
   } catch {

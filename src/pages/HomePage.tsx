@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { AppData, DAY_NAMES, DAY_ORDER } from '@/data/exercises';
-import { Dumbbell, ChevronRight, Download, Share2 } from 'lucide-react';
+import { AppData, Program, DAY_NAMES, DAY_ORDER } from '@/data/exercises';
+import { Dumbbell, ChevronRight, Download, Share2, Play, Lock } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { Badge } from '@/components/ui/badge';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
@@ -11,12 +12,10 @@ interface BeforeInstallPromptEvent extends Event {
 interface HomePageProps {
   data: AppData;
   onStartWorkout: () => void;
+  onSelectProgram: (programId: string) => void;
 }
 
-export function HomePage({ data, onStartWorkout }: HomePageProps) {
-  const nextDay = DAY_ORDER[data.nextDayIndex];
-  const upcomingDay = DAY_ORDER[(data.nextDayIndex + 1) % 3];
-
+export function HomePage({ data, onStartWorkout, onSelectProgram }: HomePageProps) {
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [installed, setInstalled] = useState(false);
 
@@ -52,35 +51,46 @@ export function HomePage({ data, onStartWorkout }: HomePageProps) {
     }
   };
 
+  const activeProgram = data.programs.find(p => p.isActive);
+  const nextDayLabel = activeProgram
+    ? activeProgram.workoutDays[activeProgram.rotationIndex % activeProgram.workoutDays.length]
+    : DAY_NAMES[DAY_ORDER[data.nextDayIndex]];
+
   return (
-    <div className="px-4 pt-12 pb-24 max-w-md mx-auto space-y-6">
-      <div className="text-center space-y-2">
-        <Dumbbell className="mx-auto text-primary" size={40} />
-        <h1 className="text-3xl font-black tracking-tight text-foreground">
+    <div className="px-4 pt-10 pb-24 max-w-md mx-auto space-y-6">
+      {/* Header */}
+      <div className="text-center space-y-1">
+        <Dumbbell className="mx-auto text-primary" size={36} />
+        <h1 className="text-2xl font-black tracking-tight text-foreground">
           Ricardo Routine
         </h1>
-        <p className="text-muted-foreground text-sm">Push • Pull • Legs</p>
+        <p className="text-muted-foreground text-xs">Choose your program</p>
       </div>
 
-      {/* Next workout */}
-      <div className="bg-card rounded-xl p-5 space-y-2">
-        <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Next Workout</p>
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-bold text-foreground">{DAY_NAMES[nextDay]}</h2>
-          <ChevronRight className="text-primary" size={24} />
-        </div>
-      </div>
+      {/* Programs */}
+      <div className="space-y-3">
+        <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">
+          Programs
+        </p>
 
-      {/* Upcoming */}
-      <div className="bg-card rounded-xl p-5 space-y-2 opacity-60">
-        <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Up Next</p>
-        <h2 className="text-lg font-bold text-foreground">{DAY_NAMES[upcomingDay]}</h2>
-      </div>
-
-      {/* Workout count */}
-      <div className="bg-card rounded-xl p-5 flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">Total workouts</p>
-        <span className="text-2xl font-black text-primary">{data.workouts.length}</span>
+        {data.programs.map((program) => (
+          <ProgramCard
+            key={program.id}
+            program={program}
+            nextDayLabel={
+              program.isActive
+                ? nextDayLabel
+                : program.workoutDays[0]
+            }
+            totalWorkouts={
+              program.isActive ? data.workouts.length : 0
+            }
+            onStart={() => {
+              if (program.isActive) onStartWorkout();
+            }}
+            onSelect={() => onSelectProgram(program.id)}
+          />
+        ))}
       </div>
 
       {/* Install & Share */}
@@ -90,29 +100,100 @@ export function HomePage({ data, onStartWorkout }: HomePageProps) {
             onClick={handleInstall}
             className="flex-1 flex items-center justify-center gap-2 bg-primary text-primary-foreground font-bold py-3 rounded-xl active:scale-[0.98] transition-transform"
           >
-            <Download size={20} /> Install App
+            <Download size={18} /> Install App
           </button>
         ) : installed ? (
           <div className="flex-1 flex items-center justify-center gap-2 bg-card text-muted-foreground font-bold py-3 rounded-xl">
-            <Download size={20} /> Installed
+            <Download size={18} /> Installed
           </div>
         ) : null}
         <button
           onClick={handleShare}
           className={`${installPrompt || installed ? 'flex-1' : 'w-full'} flex items-center justify-center gap-2 bg-primary text-primary-foreground font-bold py-3 rounded-xl active:scale-[0.98] transition-transform`}
         >
-          <Share2 size={20} /> Share
+          <Share2 size={18} /> Share
         </button>
       </div>
 
-      {/* Start button */}
-      <div className="fixed bottom-20 left-4 right-4 max-w-md mx-auto">
-        <button
-          onClick={onStartWorkout}
-          className="w-full bg-primary text-primary-foreground font-bold text-lg py-4 rounded-xl active:scale-[0.98] transition-transform"
-        >
-          START NEXT WORKOUT
-        </button>
+      {/* Workout count */}
+      <div className="bg-card rounded-xl p-4 flex items-center justify-between">
+        <p className="text-sm text-muted-foreground">Total workouts</p>
+        <span className="text-2xl font-black text-primary">{data.workouts.length}</span>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Program Card ─── */
+
+function ProgramCard({
+  program,
+  nextDayLabel,
+  totalWorkouts,
+  onStart,
+  onSelect,
+}: {
+  program: Program;
+  nextDayLabel: string;
+  totalWorkouts: number;
+  onStart: () => void;
+  onSelect: () => void;
+}) {
+  const isActive = program.isActive;
+  const isLocked = !!program.comingSoon;
+
+  return (
+    <div
+      className={`bg-card rounded-xl p-4 space-y-3 ${isLocked ? 'opacity-50' : ''}`}
+    >
+      {/* Top row */}
+      <div className="flex items-start justify-between">
+        <div className="space-y-1 flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <h3 className="text-base font-bold text-foreground truncate">
+              {program.name}
+            </h3>
+            {isActive && (
+              <Badge variant="default" className="bg-primary text-primary-foreground text-[10px] px-1.5 py-0 h-5 shrink-0">
+                Active
+              </Badge>
+            )}
+            {isLocked && (
+              <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-5 shrink-0">
+                Coming soon
+              </Badge>
+            )}
+          </div>
+          {/* Equipment tags */}
+          <div className="flex gap-1.5 flex-wrap">
+            {program.equipment.map(eq => (
+              <span key={eq} className="text-[10px] bg-secondary text-muted-foreground px-2 py-0.5 rounded-md">
+                {eq}
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Next workout & Start */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <ChevronRight size={14} className="text-primary" />
+          <span>
+            {isLocked ? '—' : `Next: ${nextDayLabel}`}
+          </span>
+        </div>
+
+        {isActive && !isLocked ? (
+          <button
+            onClick={(e) => { e.stopPropagation(); onStart(); }}
+            className="flex items-center gap-1.5 bg-primary text-primary-foreground font-bold text-sm px-4 py-2 rounded-lg active:scale-[0.97] transition-transform"
+          >
+            <Play size={14} fill="currentColor" /> Start
+          </button>
+        ) : isLocked ? (
+          <Lock size={18} className="text-muted-foreground" />
+        ) : null}
       </div>
     </div>
   );
