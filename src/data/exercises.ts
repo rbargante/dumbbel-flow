@@ -46,11 +46,57 @@ export interface AppSettings {
   requirePelvicReset: boolean;
 }
 
+export type ProgramType = 'ppl' | 'full_body' | 'upper_lower';
+
+export interface Program {
+  id: string;
+  name: string;
+  type: ProgramType;
+  isActive: boolean;
+  equipment: string[];
+  workoutDays: string[];
+  rotationIndex: number;
+  comingSoon?: boolean;
+}
+
+export const DEFAULT_PROGRAMS: Program[] = [
+  {
+    id: 'ppl_dumbbell',
+    name: 'Only Dumbbell PPL',
+    type: 'ppl',
+    isActive: true,
+    equipment: ['Dumbbells', 'Bench'],
+    workoutDays: ['Push', 'Pull', 'Legs'],
+    rotationIndex: 0,
+  },
+  {
+    id: 'full_body_dumbbell',
+    name: 'Only Dumbbell Full Body',
+    type: 'full_body',
+    isActive: false,
+    equipment: ['Dumbbells'],
+    workoutDays: ['Full Body A', 'Full Body B'],
+    rotationIndex: 0,
+    comingSoon: true,
+  },
+  {
+    id: 'upper_lower_dumbbell',
+    name: 'Only Dumbbell Upper/Lower',
+    type: 'upper_lower',
+    isActive: false,
+    equipment: ['Dumbbells', 'Bench'],
+    workoutDays: ['Upper', 'Lower'],
+    rotationIndex: 0,
+    comingSoon: true,
+  },
+];
+
 export interface AppData {
   nextDayIndex: number;
   workouts: WorkoutLog[];
   lastSessionByExercise: Record<string, SetLog[]>;
   settings: AppSettings;
+  programs: Program[];
 }
 
 export const PELVIC_RESET_EXERCISES = [
@@ -168,4 +214,5 @@ export const DEFAULT_APP_DATA: AppData = {
     soundEnabled: true,
     requirePelvicReset: true,
   },
+  programs: DEFAULT_PROGRAMS,
 };

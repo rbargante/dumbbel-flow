@@ -26,12 +26,27 @@ const Index = () => {
       navigate('workout');
     }
   };
+
+  const handleSelectProgram = (programId: string) => {
+    // For now, only active program can be started
+    const program = appData.data.programs.find(p => p.id === programId);
+    if (program?.isActive) {
+      handleStartWorkout();
+    }
+  };
+
   const handleStartMain = () => navigate('workout');
   const handleFinishWorkout = () => navigate('home');
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      {screen === 'home' && <HomePage data={appData.data} onStartWorkout={handleStartWorkout} />}
+      {screen === 'home' && (
+        <HomePage
+          data={appData.data}
+          onStartWorkout={handleStartWorkout}
+          onSelectProgram={handleSelectProgram}
+        />
+      )}
       {screen === 'pelvic-reset' && <PelvicResetPage onStart={handleStartMain} onBack={() => navigate('home')} />}
       {screen === 'workout' && (
         <WorkoutPage
