@@ -21,7 +21,7 @@ interface ExerciseCardProps {
 }
 
 const WEIGHT_PICKS = [2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32];
-const SETS_QUICK = [3, 4, 5, 6, 7];
+const MAX_SETS = 10;
 
 export function ExerciseCard({
   name, exerciseId, setsCount, repRange, lastSession, currentSets, onSetChange, onSetDone, onSetsCountChange, isBase, onRemove, onSwap, isPR, mediaUrl,
@@ -32,13 +32,10 @@ export function ExerciseCard({
   const [editingSet, setEditingSet] = useState<number | null>(null);
   const [editReps, setEditReps] = useState(0);
   const [editWeight, setEditWeight] = useState(0);
-  const [showSetsSelector, setShowSetsSelector] = useState(false);
-  const [showSetsNumeric, setShowSetsNumeric] = useState(false);
   const [amrapSet, setAmrapSet] = useState<number | null>(null);
   const [amrapReps, setAmrapReps] = useState(0);
 
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const setsLongPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const didLongPress = useRef(false);
 
   const equivalents = EXERCISE_EQUIVALENTS[exerciseId] || [];
@@ -52,12 +49,17 @@ export function ExerciseCard({
     didLongPress.current = false;
     longPressTimer.current = setTimeout(() => {
       didLongPress.current = true;
-      const set = currentSets[i];
-      setEditReps(set.reps || 0);
-      setEditWeight(set.weight || 0);
-      setEditingSet(i);
+      // Long-press on last circle = remove it
+      if (i === currentSets.length - 1 && currentSets.length > 1 && onSetsCountChange) {
+        onSetsCountChange(currentSets.length - 1);
+      } else {
+        const set = currentSets[i];
+        setEditReps(set.reps || 5);
+        setEditWeight(set.weight || 0);
+        setEditingSet(i);
+      }
     }, 500);
-  }, [currentSets]);
+  }, [currentSets, onSetsCountChange]);
 
   const handlePointerUp = useCallback((i: number) => {
     if (longPressTimer.current) {
@@ -112,21 +114,10 @@ export function ExerciseCard({
     }
   };
 
-  // Sets count long-press
-  const handleSetsPointerDown = useCallback(() => {
-    setsLongPressTimer.current = setTimeout(() => {
-      setShowSetsNumeric(true);
-    }, 500);
-  }, []);
-
-  const handleSetsPointerUp = useCallback(() => {
-    if (setsLongPressTimer.current) {
-      clearTimeout(setsLongPressTimer.current);
-      setsLongPressTimer.current = null;
-    }
-    if (showSetsNumeric) return;
-    setShowSetsSelector(!showSetsSelector);
-  }, [showSetsSelector, showSetsNumeric]);
+  const handleAddSet = useCallback(() => {
+    if (currentSets.length >= MAX_SETS || !onSetsCountChange) return;
+    onSetsCountChange(currentSets.length + 1);
+  }, [currentSets.length, onSetsCountChange]);
 
   return (
     <div className="bg-card rounded-lg p-4 space-y-3">
@@ -142,25 +133,7 @@ export function ExerciseCard({
               </span>
             )}
           </div>
-          <div className="flex items-center gap-2">
-            <p className="text-sm text-muted-foreground">{currentSets.length} × {repRange}</p>
-            {/* Sets control */}
-            {onSetsCountChange && (
-              <button
-                onPointerDown={handleSetsPointerDown}
-                onPointerUp={handleSetsPointerUp}
-                onPointerLeave={() => {
-                  if (setsLongPressTimer.current) {
-                    clearTimeout(setsLongPressTimer.current);
-                    setsLongPressTimer.current = null;
-                  }
-                }}
-                className="text-xs px-2 py-0.5 rounded bg-secondary text-muted-foreground font-semibold"
-              >
-                Sets: {currentSets.length}
-              </button>
-            )}
-          </div>
+          <p className="text-sm text-muted-foreground">{currentSets.length} × {repRange}</p>
         </div>
         <div className="flex items-center gap-1">
           {mediaUrl && (
@@ -180,52 +153,6 @@ export function ExerciseCard({
           )}
         </div>
       </div>
-
-      {/* Quick sets selector */}
-      {showSetsSelector && onSetsCountChange && (
-        <div className="flex items-center justify-center gap-2">
-          {SETS_QUICK.map(n => (
-            <button
-              key={n}
-              onClick={() => {
-                onSetsCountChange(n);
-                setShowSetsSelector(false);
-              }}
-              className={cn(
-                'w-9 h-9 rounded-full text-sm font-bold transition-colors',
-                n === currentSets.length ? 'bg-primary text-primary-foreground' : 'bg-secondary text-foreground'
-              )}
-            >
-              {n}
-            </button>
-          ))}
-        </div>
-      )}
-
-      {/* Numeric sets picker (long-press) */}
-      {showSetsNumeric && onSetsCountChange && (
-        <div className="bg-secondary rounded-lg p-3 space-y-2">
-          <p className="text-xs text-muted-foreground font-semibold uppercase text-center">Number of Sets</p>
-          <div className="grid grid-cols-6 gap-1">
-            {Array.from({ length: 12 }, (_, i) => i + 1).map(n => (
-              <button
-                key={n}
-                onClick={() => {
-                  onSetsCountChange(n);
-                  setShowSetsNumeric(false);
-                }}
-                className={cn(
-                  'py-2 rounded text-sm font-bold transition-colors',
-                  n === currentSets.length ? 'bg-primary text-primary-foreground' : 'bg-card text-foreground'
-                )}
-              >
-                {n}
-              </button>
-            ))}
-          </div>
-          <button onClick={() => setShowSetsNumeric(false)} className="w-full text-center text-xs text-muted-foreground py-1">Cancel</button>
-        </div>
-      )}
 
       {/* Swap panel */}
       {showSwap && equivalents.length > 0 && (
@@ -287,6 +214,18 @@ export function ExerciseCard({
             </button>
           </div>
         ))}
+        {/* + Add set button */}
+        {onSetsCountChange && currentSets.length < MAX_SETS && (
+          <div className="flex flex-col items-center gap-1">
+            <button
+              onClick={handleAddSet}
+              className="w-14 h-14 rounded-full flex items-center justify-center border-2 border-dashed border-muted-foreground/30 text-muted-foreground active:border-primary active:text-primary transition-colors select-none touch-manipulation"
+            >
+              <Plus size={20} />
+            </button>
+            <span className="text-xs text-muted-foreground/50">Add</span>
+          </div>
+        )}
       </div>
 
       {/* Per-set weight editor */}
