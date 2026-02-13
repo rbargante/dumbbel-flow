@@ -19,7 +19,13 @@ const Index = () => {
     if (s === 'home' || s === 'history' || s === 'settings') setActiveTab(s);
   };
 
-  const handleStartWorkout = () => navigate('pelvic-reset');
+  const handleStartWorkout = () => {
+    if (appData.data.settings.requirePelvicReset) {
+      navigate('pelvic-reset');
+    } else {
+      navigate('workout');
+    }
+  };
   const handleStartMain = () => navigate('workout');
   const handleFinishWorkout = () => navigate('home');
 
