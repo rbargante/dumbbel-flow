@@ -74,7 +74,7 @@ export const DEFAULT_PROGRAMS: Program[] = [
     name: 'Only Dumbbell Full Body',
     type: 'full_body',
     isActive: false,
-    equipment: ['Dumbbells'],
+    equipment: ['Dumbbells', 'Bench'],
     workoutDays: ['Full Body A', 'Full Body B'],
     rotationIndex: 0,
     comingSoon: true,
