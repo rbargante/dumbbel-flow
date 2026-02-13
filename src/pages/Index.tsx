@@ -7,6 +7,7 @@ import { PelvicResetPage } from '@/pages/PelvicResetPage';
 import { WorkoutPage } from '@/pages/WorkoutPage';
 import { HistoryPage } from '@/pages/HistoryPage';
 import { SettingsPage } from '@/pages/SettingsPage';
+import { PROGRAM_DAY_ORDERS, DAY_ORDER } from '@/data/exercises';
 
 type Screen = 'home' | 'workout-select' | 'history' | 'settings' | 'pelvic-reset' | 'workout';
 
@@ -15,6 +16,10 @@ const Index = () => {
   const [screen, setScreen] = useState<Screen>('home');
   const [activeTab, setActiveTab] = useState<'home' | 'history' | 'settings'>('home');
   const [overrideDayIndex, setOverrideDayIndex] = useState<number | null>(null);
+
+  const activeProgram = appData.data.programs.find(p => p.isActive);
+  const activeProgramId = activeProgram?.id || 'ppl_dumbbell';
+  const dayOrder = PROGRAM_DAY_ORDERS[activeProgramId] || DAY_ORDER;
 
   const navigate = (s: Screen) => {
     setScreen(s);
@@ -44,7 +49,6 @@ const Index = () => {
     navigate('home');
   };
 
-  // Determine the effective day index for workout
   const effectiveDayIndex = overrideDayIndex ?? appData.data.nextDayIndex;
 
   return (
@@ -58,7 +62,8 @@ const Index = () => {
       )}
       {screen === 'workout-select' && (
         <WorkoutSelectPage
-          programName={appData.data.programs.find(p => p.isActive)?.name ?? 'Workout'}
+          programId={activeProgramId}
+          programName={activeProgram?.name ?? 'Workout'}
           nextDayIndex={appData.data.nextDayIndex}
           onSelectDay={(dayIndex) => startWorkoutFlow(dayIndex)}
           onStartNext={() => startWorkoutFlow()}
