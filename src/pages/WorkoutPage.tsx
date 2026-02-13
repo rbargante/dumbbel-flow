@@ -204,6 +204,7 @@ export function WorkoutPage({ data, onFinish }: WorkoutPageProps) {
         totalSeconds={timer.totalSeconds}
         onStop={timer.stop}
         onAdjust={timer.adjust}
+        onSetDuration={timer.setDuration}
       />
 
       <div className="flex items-center justify-between">

@@ -31,6 +31,12 @@ export function useRestTimer(soundEnabled: boolean) {
     setTotalSeconds(prev => Math.max(prev, prev + delta));
   }, []);
 
+  const setDuration = useCallback((seconds: number) => {
+    setSecondsLeft(seconds);
+    setTotalSeconds(seconds);
+    setIsRunning(true);
+  }, []);
+
   useEffect(() => {
     if (!isRunning) return;
     intervalRef.current = setInterval(() => {
@@ -65,5 +71,5 @@ export function useRestTimer(soundEnabled: boolean) {
     return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
   }, [isRunning, soundEnabled]);
 
-  return { secondsLeft, totalSeconds, isRunning, start, stop, adjust };
+  return { secondsLeft, totalSeconds, isRunning, start, stop, adjust, setDuration };
 }
