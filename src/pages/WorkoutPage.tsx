@@ -136,6 +136,37 @@ export function WorkoutPage({ data, onFinish }: WorkoutPageProps) {
     scheduleRealTimeSave();
   };
 
+  const handleSetsCountChange = (exIdx: number, newCount: number) => {
+    setExercises(prev => {
+      const copy = [...prev];
+      const ex = { ...copy[exIdx] };
+      const oldSets = [...ex.sets];
+
+      if (newCount < oldSets.length) {
+        // Confirm removing last sets (keep first N)
+        const hasDoneData = oldSets.slice(newCount).some(s => s.done || s.weight > 0 || s.reps > 0);
+        if (hasDoneData && !window.confirm(`Remove last ${oldSets.length - newCount} set(s)? Data will be lost.`)) {
+          return prev;
+        }
+        ex.sets = oldSets.slice(0, newCount);
+      } else {
+        // Add new sets, copying last known weight
+        const lastWeight = oldSets.length > 0 ? oldSets[oldSets.length - 1].weight : 0;
+        const lastReps = oldSets.length > 0 ? oldSets[oldSets.length - 1].reps : 0;
+        const newSets = Array.from({ length: newCount - oldSets.length }, () => ({
+          weight: lastWeight,
+          reps: lastReps,
+          done: false,
+        }));
+        ex.sets = [...oldSets, ...newSets];
+      }
+
+      copy[exIdx] = ex;
+      return copy;
+    });
+    scheduleRealTimeSave();
+  };
+
   const handleSwap = (exIdx: number, altId: string, altName: string, altSets: number, altRepRange: string, altIsCompound: boolean) => {
     setExercises(prev => {
       const copy = [...prev];
@@ -243,6 +274,7 @@ export function WorkoutPage({ data, onFinish }: WorkoutPageProps) {
           currentSets={ex.sets}
           onSetChange={(si, f, v) => handleSetChange(i, si, f, v)}
           onSetDone={(si) => handleSetDone(i, si)}
+          onSetsCountChange={(count) => handleSetsCountChange(i, count)}
           isBase={ex.isBase}
           onRemove={ex.isBase ? undefined : () => removeExercise(i)}
           onSwap={(altId, altName, altSets, altRepRange, altIsCompound) =>
