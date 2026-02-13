@@ -55,7 +55,7 @@ export function ExerciseCard({
       } else {
         const set = currentSets[i];
         setEditReps(set.reps || 5);
-        setEditWeight(set.weight || 0);
+        setEditWeight(set.weight || 5);
         setEditingSet(i);
       }
     }, 500);
@@ -210,7 +210,7 @@ export function ExerciseCard({
                 editingWeightSet === i ? 'bg-primary/20 text-primary' : 'text-muted-foreground'
               )}
             >
-              {set.weight > 0 ? `${set.weight}kg` : '—'}
+              {`${set.weight}kg`}
             </button>
           </div>
         ))}
