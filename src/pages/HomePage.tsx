@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 import { AppData, Program, DAY_NAMES, DAY_ORDER } from '@/data/exercises';
-import { Dumbbell, ChevronRight, Download, Share2, Play, Lock } from 'lucide-react';
+import { Dumbbell, ChevronRight, Download, Share2, Play, Lock, RotateCcw } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import { Badge } from '@/components/ui/badge';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
@@ -13,9 +12,11 @@ interface HomePageProps {
   data: AppData;
   onStartWorkout: () => void;
   onSelectProgram: (programId: string) => void;
+  onContinueLastWorkout?: () => void;
+  hasActiveSession?: boolean;
 }
 
-export function HomePage({ data, onStartWorkout, onSelectProgram }: HomePageProps) {
+export function HomePage({ data, onStartWorkout, onSelectProgram, onContinueLastWorkout, hasActiveSession }: HomePageProps) {
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [installed, setInstalled] = useState(false);
 
@@ -53,7 +54,7 @@ export function HomePage({ data, onStartWorkout, onSelectProgram }: HomePageProp
 
   const activeProgram = data.programs.find(p => p.isActive);
   const nextDayLabel = activeProgram
-    ? activeProgram.workoutDays[activeProgram.rotationIndex % activeProgram.workoutDays.length]
+    ? activeProgram.workoutDays[data.nextDayIndex % activeProgram.workoutDays.length]
     : DAY_NAMES[DAY_ORDER[data.nextDayIndex]];
 
   return (
@@ -78,41 +79,52 @@ export function HomePage({ data, onStartWorkout, onSelectProgram }: HomePageProp
             key={program.id}
             program={program}
             nextDayLabel={
-              program.isActive
-                ? nextDayLabel
-                : program.workoutDays[0]
-            }
-            totalWorkouts={
-              program.isActive ? data.workouts.length : 0
+              program.isActive ? nextDayLabel : program.workoutDays[0]
             }
             onStart={() => {
-              if (program.isActive) onStartWorkout();
+              if (program.isActive) onSelectProgram(program.id);
             }}
-            onSelect={() => onSelectProgram(program.id)}
           />
         ))}
       </div>
 
-      {/* Install & Share */}
-      <div className="flex gap-3">
-        {installPrompt && !installed ? (
+      {/* Quick Actions */}
+      <div className="space-y-3">
+        <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">
+          Quick Actions
+        </p>
+
+        {/* Continue Last Workout */}
+        {hasActiveSession && onContinueLastWorkout && (
           <button
-            onClick={handleInstall}
-            className="flex-1 flex items-center justify-center gap-2 bg-primary text-primary-foreground font-bold py-3 rounded-xl active:scale-[0.98] transition-transform"
+            onClick={onContinueLastWorkout}
+            className="w-full flex items-center justify-center gap-2 bg-card border border-primary text-primary font-bold py-3 rounded-xl active:scale-[0.98] transition-transform"
           >
-            <Download size={18} /> Install App
+            <RotateCcw size={18} /> Continue Last Workout
           </button>
-        ) : installed ? (
-          <div className="flex-1 flex items-center justify-center gap-2 bg-card text-muted-foreground font-bold py-3 rounded-xl">
-            <Download size={18} /> Installed
-          </div>
-        ) : null}
-        <button
-          onClick={handleShare}
-          className={`${installPrompt || installed ? 'flex-1' : 'w-full'} flex items-center justify-center gap-2 bg-primary text-primary-foreground font-bold py-3 rounded-xl active:scale-[0.98] transition-transform`}
-        >
-          <Share2 size={18} /> Share
-        </button>
+        )}
+
+        {/* Install & Share */}
+        <div className="flex gap-3">
+          {installPrompt && !installed ? (
+            <button
+              onClick={handleInstall}
+              className="flex-1 flex items-center justify-center gap-2 bg-primary text-primary-foreground font-bold py-3 rounded-xl active:scale-[0.98] transition-transform"
+            >
+              <Download size={18} /> Install App
+            </button>
+          ) : installed ? (
+            <div className="flex-1 flex items-center justify-center gap-2 bg-card text-muted-foreground font-bold py-3 rounded-xl">
+              <Download size={18} /> Installed
+            </div>
+          ) : null}
+          <button
+            onClick={handleShare}
+            className={`${installPrompt || installed ? 'flex-1' : 'w-full'} flex items-center justify-center gap-2 bg-card text-foreground font-bold py-3 rounded-xl active:scale-[0.98] transition-transform border border-secondary`}
+          >
+            <Share2 size={18} /> Share
+          </button>
+        </div>
       </div>
 
       {/* Workout count */}
@@ -129,49 +141,49 @@ export function HomePage({ data, onStartWorkout, onSelectProgram }: HomePageProp
 function ProgramCard({
   program,
   nextDayLabel,
-  totalWorkouts,
   onStart,
-  onSelect,
 }: {
   program: Program;
   nextDayLabel: string;
-  totalWorkouts: number;
   onStart: () => void;
-  onSelect: () => void;
 }) {
   const isActive = program.isActive;
   const isLocked = !!program.comingSoon;
 
   return (
     <div
-      className={`bg-card rounded-xl p-4 space-y-3 ${isLocked ? 'opacity-50' : ''}`}
+      className={`bg-card rounded-xl p-4 space-y-3 transition-all ${
+        isActive
+          ? 'border-2 border-primary'
+          : isLocked
+          ? 'opacity-45 border border-secondary'
+          : 'border border-secondary'
+      }`}
     >
       {/* Top row */}
-      <div className="flex items-start justify-between">
-        <div className="space-y-1 flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <h3 className="text-base font-bold text-foreground truncate">
-              {program.name}
-            </h3>
-            {isActive && (
-              <Badge variant="default" className="bg-primary text-primary-foreground text-[10px] px-1.5 py-0 h-5 shrink-0">
-                Active
-              </Badge>
-            )}
-            {isLocked && (
-              <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-5 shrink-0">
-                Coming soon
-              </Badge>
-            )}
-          </div>
-          {/* Equipment tags */}
-          <div className="flex gap-1.5 flex-wrap">
-            {program.equipment.map(eq => (
-              <span key={eq} className="text-[10px] bg-secondary text-muted-foreground px-2 py-0.5 rounded-md">
-                {eq}
-              </span>
-            ))}
-          </div>
+      <div className="space-y-1.5">
+        <div className="flex items-center gap-2">
+          <h3 className="text-base font-bold text-foreground truncate">
+            {program.name}
+          </h3>
+          {isActive && (
+            <span className="bg-primary text-primary-foreground text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0">
+              ACTIVE
+            </span>
+          )}
+          {isLocked && (
+            <span className="bg-secondary text-muted-foreground text-[10px] font-semibold px-2 py-0.5 rounded-full shrink-0">
+              Coming soon
+            </span>
+          )}
+        </div>
+        {/* Equipment tags */}
+        <div className="flex gap-1.5 flex-wrap">
+          {program.equipment.map(eq => (
+            <span key={eq} className="text-[10px] bg-secondary text-muted-foreground px-2 py-0.5 rounded-md">
+              {eq}
+            </span>
+          ))}
         </div>
       </div>
 
@@ -187,9 +199,9 @@ function ProgramCard({
         {isActive && !isLocked ? (
           <button
             onClick={(e) => { e.stopPropagation(); onStart(); }}
-            className="flex items-center gap-1.5 bg-primary text-primary-foreground font-bold text-sm px-4 py-2 rounded-lg active:scale-[0.97] transition-transform"
+            className="flex items-center gap-1.5 bg-primary text-primary-foreground font-bold text-sm px-5 py-2.5 rounded-lg active:scale-[0.97] transition-transform"
           >
-            <Play size={14} fill="currentColor" /> Start
+            <Play size={14} fill="currentColor" /> START
           </button>
         ) : isLocked ? (
           <Lock size={18} className="text-muted-foreground" />
