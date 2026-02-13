@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef } from 'react';
-import { AppData, DEFAULT_APP_DATA, WorkoutLog, ExerciseLog } from '@/data/exercises';
+import { AppData, DEFAULT_APP_DATA, WorkoutLog, ExerciseLog, PROGRAM_DAY_ORDERS, DAY_ORDER } from '@/data/exercises';
 import { loadState, saveState } from '@/lib/storage';
 
 export function useAppData() {
@@ -16,13 +16,20 @@ export function useAppData() {
 
   const hydrated = hydratedRef.current || data !== DEFAULT_APP_DATA;
 
+  const getDayCount = useCallback((appData: AppData) => {
+    const active = appData.programs.find(p => p.isActive);
+    const dayOrder = active ? (PROGRAM_DAY_ORDERS[active.id] || DAY_ORDER) : DAY_ORDER;
+    return dayOrder.length;
+  }, []);
+
   const advanceDay = useCallback(() => {
     setData(prev => {
-      const next = { ...prev, nextDayIndex: (prev.nextDayIndex + 1) % 3 };
+      const count = getDayCount(prev);
+      const next = { ...prev, nextDayIndex: (prev.nextDayIndex + 1) % count };
       saveState(next);
       return next;
     });
-  }, []);
+  }, [getDayCount]);
 
   const saveWorkout = useCallback((workout: WorkoutLog) => {
     setData(prev => {
@@ -37,12 +44,12 @@ export function useAppData() {
         ...prev,
         workouts: [workout, ...prev.workouts],
         lastSessionByExercise: newLastSession,
-        nextDayIndex: (prev.nextDayIndex + 1) % 3,
+        nextDayIndex: (prev.nextDayIndex + 1) % getDayCount(prev),
       };
       saveState(next);
       return next;
     });
-  }, []);
+  }, [getDayCount]);
 
   // Save current workout progress in real-time (updates lastSession live)
   const saveProgress = useCallback((exercises: ExerciseLog[]) => {

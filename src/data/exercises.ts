@@ -1,12 +1,19 @@
-export type WorkoutDay = 'push' | 'pull' | 'legs';
+export type WorkoutDay = 'push' | 'pull' | 'legs' | 'full_body';
 
 export const DAY_NAMES: Record<WorkoutDay, string> = {
   push: 'Push Day',
   pull: 'Pull Day',
   legs: 'Legs Day',
+  full_body: 'Full Body',
 };
 
 export const DAY_ORDER: WorkoutDay[] = ['push', 'pull', 'legs'];
+
+// Program-specific day orders
+export const PROGRAM_DAY_ORDERS: Record<string, WorkoutDay[]> = {
+  ppl_dumbbell: ['push', 'pull', 'legs'],
+  full_body_dumbbell: ['full_body'],
+};
 
 export interface Exercise {
   id: string;
@@ -38,6 +45,7 @@ export interface WorkoutLog {
   exercises: ExerciseLog[];
   durationSeconds?: number;
   totalKg?: number;
+  programId?: string;
 }
 
 export interface AppSettings {
@@ -75,9 +83,8 @@ export const DEFAULT_PROGRAMS: Program[] = [
     type: 'full_body',
     isActive: false,
     equipment: ['Dumbbells', 'Bench'],
-    workoutDays: ['Full Body A', 'Full Body B'],
+    workoutDays: ['Full Body'],
     rotationIndex: 0,
-    comingSoon: true,
   },
   {
     id: 'upper_lower_dumbbell',
@@ -128,6 +135,17 @@ export const BASE_EXERCISES: Exercise[] = [
   { id: 'legs3', name: 'Dumbbell RDL', sets: 3, repRange: '8–10', isCompound: true, day: 'legs' },
   { id: 'legs4', name: 'Walking Lunges', sets: 3, repRange: '10 cada perna', isCompound: true, day: 'legs' },
   { id: 'legs5', name: 'Standing Calf Raise', sets: 4, repRange: '12–15', isCompound: false, day: 'legs' },
+
+  // Full Body
+  { id: 'fb1', name: 'Flat Dumbbell Bench Press', sets: 4, repRange: '6–8', isCompound: true, day: 'full_body' },
+  { id: 'fb2', name: 'One-Arm Dumbbell Row', sets: 4, repRange: '6–8', isCompound: true, day: 'full_body' },
+  { id: 'fb3', name: 'Goblet Squat', sets: 4, repRange: '8–10', isCompound: true, day: 'full_body' },
+  { id: 'fb4', name: 'Romanian Deadlift', sets: 4, repRange: '6–8', isCompound: true, day: 'full_body' },
+  { id: 'fb5', name: 'Seated Dumbbell Shoulder Press', sets: 4, repRange: '6–8', isCompound: true, day: 'full_body' },
+  { id: 'fb6', name: 'Dumbbell Lateral Raise', sets: 4, repRange: '12–15', isCompound: false, day: 'full_body' },
+  { id: 'fb7', name: 'Alternating Dumbbell Curl', sets: 4, repRange: '8–10', isCompound: false, day: 'full_body' },
+  { id: 'fb8', name: 'Overhead Dumbbell Triceps Extension', sets: 4, repRange: '10–12', isCompound: false, day: 'full_body' },
+  { id: 'fb9', name: 'Standing Calf Raise', sets: 4, repRange: '12–15', isCompound: false, day: 'full_body' },
 ];
 
 export const EXTRA_EXERCISES: Record<WorkoutDay, { id: string; name: string; defaultSets: number; repRange: string; isCompound: boolean }[]> = {
@@ -148,6 +166,12 @@ export const EXTRA_EXERCISES: Record<WorkoutDay, { id: string; name: string; def
     { id: 'extra_legs2', name: 'Step Up', defaultSets: 3, repRange: '10 cada perna', isCompound: true },
     { id: 'extra_legs3', name: 'Seated Calf Raise', defaultSets: 3, repRange: '15–20', isCompound: false },
     { id: 'extra_legs4', name: 'Hip Thrust', defaultSets: 3, repRange: '10–12', isCompound: true },
+  ],
+  full_body: [
+    { id: 'extra_fb1', name: 'Chest Fly', defaultSets: 3, repRange: '10–12', isCompound: false },
+    { id: 'extra_fb2', name: 'Rear Delt Fly', defaultSets: 3, repRange: '12–15', isCompound: false },
+    { id: 'extra_fb3', name: 'Hammer Curl', defaultSets: 3, repRange: '10–12', isCompound: false },
+    { id: 'extra_fb4', name: 'Walking Lunges', defaultSets: 3, repRange: '10 cada perna', isCompound: true },
   ],
 };
 
@@ -202,6 +226,28 @@ export const EXERCISE_EQUIVALENTS: Record<string, { id: string; name: string; se
   ],
   legs5: [
     { id: 'legs5_alt1', name: 'Seated Calf Raise', sets: 4, repRange: '15–20', isCompound: false },
+  ],
+  // Full Body equivalents
+  fb1: [
+    { id: 'fb1_alt1', name: 'Floor Dumbbell Press', sets: 4, repRange: '6–8', isCompound: true },
+  ],
+  fb2: [
+    { id: 'fb2_alt1', name: 'Bent Over Dumbbell Row', sets: 4, repRange: '6–8', isCompound: true },
+  ],
+  fb3: [
+    { id: 'fb3_alt1', name: 'Sumo Squat', sets: 4, repRange: '8–10', isCompound: true },
+  ],
+  fb4: [
+    { id: 'fb4_alt1', name: 'Stiff Leg Deadlift', sets: 4, repRange: '6–8', isCompound: true },
+  ],
+  fb5: [
+    { id: 'fb5_alt1', name: 'Arnold Press', sets: 4, repRange: '6–8', isCompound: true },
+  ],
+  fb7: [
+    { id: 'fb7_alt1', name: 'Hammer Curl', sets: 4, repRange: '8–10', isCompound: false },
+  ],
+  fb8: [
+    { id: 'fb8_alt1', name: 'Triceps Kickback', sets: 4, repRange: '10–12', isCompound: false },
   ],
 };
 

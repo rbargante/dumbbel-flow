@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import {
-  AppData, BASE_EXERCISES, EXTRA_EXERCISES, DAY_NAMES, DAY_ORDER,
-  SetLog, WorkoutLog, Exercise,
+  AppData, BASE_EXERCISES, EXTRA_EXERCISES, DAY_NAMES, DAY_ORDER, PROGRAM_DAY_ORDERS,
+  SetLog, WorkoutLog, Exercise, WorkoutDay,
 } from '@/data/exercises';
 import { ExerciseCard } from '@/components/ExerciseCard';
 import { RestTimerBar } from '@/components/RestTimerBar';
@@ -19,7 +19,7 @@ interface ActiveExercise {
   exercise: Exercise;
   isBase: boolean;
   sets: SetLog[];
-  originalId: string; // track original ID for swap & lastSession
+  originalId: string;
 }
 
 function buildInitialSets(exerciseId: string, setsCount: number, lastSession: Record<string, SetLog[]>): SetLog[] {
@@ -33,7 +33,12 @@ function buildInitialSets(exerciseId: string, setsCount: number, lastSession: Re
 }
 
 export function WorkoutPage({ data, onFinish }: WorkoutPageProps) {
-  const day = DAY_ORDER[data.nextDayIndex];
+  // Determine the active program's day order
+  const activeProgram = data.programs.find(p => p.isActive);
+  const programId = activeProgram?.id || 'ppl_dumbbell';
+  const dayOrder = PROGRAM_DAY_ORDERS[programId] || DAY_ORDER;
+  const day = dayOrder[data.nextDayIndex % dayOrder.length];
+
   const baseExercises = BASE_EXERCISES.filter(e => e.day === day);
   const timer = useRestTimer(data.settings.soundEnabled);
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -51,7 +56,7 @@ export function WorkoutPage({ data, onFinish }: WorkoutPageProps) {
   );
 
   const [showExtras, setShowExtras] = useState(false);
-  const extras = EXTRA_EXERCISES[day];
+  const extras = EXTRA_EXERCISES[day] || [];
 
   // Duration timer
   useEffect(() => {
@@ -143,10 +148,8 @@ export function WorkoutPage({ data, onFinish }: WorkoutPageProps) {
       const oldSets = [...ex.sets];
 
       if (newCount < oldSets.length) {
-        // Remove last sets
         ex.sets = oldSets.slice(0, newCount);
       } else {
-        // Add new sets, copying last known weight
         const lastWeight = oldSets.length > 0 ? oldSets[oldSets.length - 1].weight : 5;
         const lastReps = oldSets.length > 0 ? oldSets[oldSets.length - 1].reps : 5;
         const newSets = Array.from({ length: newCount - oldSets.length }, () => ({
@@ -214,6 +217,7 @@ export function WorkoutPage({ data, onFinish }: WorkoutPageProps) {
       day,
       durationSeconds,
       totalKg,
+      programId,
       exercises: exercises.map(ex => ({
         exerciseId: ex.originalId,
         exerciseName: ex.exercise.name,
