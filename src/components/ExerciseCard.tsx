@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { SetLog } from '@/data/exercises';
 import { Minus, Plus, X, Trophy, Check } from 'lucide-react';
 import { ExerciseTipsModal } from '@/components/ExerciseTipsModal';
@@ -34,20 +34,48 @@ export function ExerciseCard({
   const [amrapSet, setAmrapSet] = useState<number | null>(null);
   const [amrapReps, setAmrapReps] = useState(0);
 
+  // Long-press handling
+  const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const longPressTriggeredRef = useRef(false);
+
   const isAmrap = (setIdx: number) => {
     return repRange.includes('+') && setIdx === currentSets.length - 1;
   };
 
+  const handlePointerDown = useCallback((i: number) => {
+    longPressTriggeredRef.current = false;
+    longPressTimerRef.current = setTimeout(() => {
+      longPressTriggeredRef.current = true;
+      const set = currentSets[i];
+      if (!set.done) {
+        setEditingRepsSet(editingRepsSet === i ? null : i);
+        setEditingWeightSet(null);
+      }
+    }, 500);
+  }, [currentSets, editingRepsSet]);
+
+  const handlePointerUpOrCancel = useCallback(() => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+  }, []);
+
   const handleCircleTap = useCallback((i: number) => {
-    const set = currentSets[i];
-    if (set.done) {
-      // Undo completion
-      onSetDone(i);
+    if (longPressTriggeredRef.current) {
+      longPressTriggeredRef.current = false;
       return;
     }
-    setEditingRepsSet(editingRepsSet === i ? null : i);
+    // Quick tap: toggle done
+    if (isAmrap(i) && !currentSets[i].done) {
+      setAmrapReps(currentSets[i].reps || 8);
+      setAmrapSet(i);
+    } else {
+      onSetDone(i);
+    }
+    setEditingRepsSet(null);
     setEditingWeightSet(null);
-  }, [currentSets, onSetDone, editingRepsSet]);
+  }, [currentSets, onSetDone]);
 
   const confirmAmrap = () => {
     if (amrapSet !== null) {
@@ -109,6 +137,10 @@ export function ExerciseCard({
           <div key={i} className="flex flex-col items-center gap-1">
             <button
               onClick={() => handleCircleTap(i)}
+              onPointerDown={() => handlePointerDown(i)}
+              onPointerUp={handlePointerUpOrCancel}
+              onPointerCancel={handlePointerUpOrCancel}
+              onContextMenu={(e) => e.preventDefault()}
               className={cn(
                 'w-14 h-14 rounded-full flex items-center justify-center transition-all border-2 select-none touch-manipulation',
                 set.done
