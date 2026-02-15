@@ -23,13 +23,9 @@ export function ExerciseDemoModal({ exerciseName, onClose }: ExerciseDemoModalPr
           </button>
         </div>
 
-        <div className="bg-secondary rounded-xl p-4 aspect-square flex items-center justify-center">
+        <div className="bg-secondary rounded-xl p-6 aspect-square flex items-center justify-center">
           <ExerciseDemoAnimation exerciseName={exerciseName} />
         </div>
-
-        <p className="text-xs text-muted-foreground text-center">
-          Placeholder animation · Tap outside to close
-        </p>
       </div>
     </div>
   );
