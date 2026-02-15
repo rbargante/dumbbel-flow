@@ -26,6 +26,14 @@ export function loadState(): AppData | null {
       // Ensure programs array exists for legacy data
       if (!data.programs || data.programs.length === 0) {
         data.programs = DEFAULT_PROGRAMS;
+      } else {
+        // Merge any new programs from defaults that don't exist in saved data
+        const savedIds = new Set(data.programs.map(p => p.id));
+        for (const dp of DEFAULT_PROGRAMS) {
+          if (!savedIds.has(dp.id)) {
+            data.programs.push({ ...dp });
+          }
+        }
       }
       return data;
     }
