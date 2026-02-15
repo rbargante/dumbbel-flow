@@ -1,9 +1,11 @@
 import { AppSettings, AppData } from '@/data/exercises';
-import { Download, Upload } from 'lucide-react';
+import { Download, Upload, Share2, Smartphone } from 'lucide-react';
 import { useRef } from 'react';
 import { cn } from '@/lib/utils';
 import { getLastSaved } from '@/lib/storage';
 import { z } from 'zod';
+import { useInstallPrompt } from '@/hooks/useInstallPrompt';
+import { toast } from '@/hooks/use-toast';
 
 const SetLogSchema = z.object({
   weight: z.number(),
@@ -80,6 +82,29 @@ function Toggle({ label, checked, onChange, description }: { label: string; chec
 
 export function SettingsPage({ settings, hydrated, workoutsCount, onUpdateSettings, onExport, onImport }: SettingsPageProps) {
   const fileRef = useRef<HTMLInputElement>(null);
+  const { installPrompt, isInstalled, isIOS, isAndroid, promptInstall } = useInstallPrompt();
+
+  const handleShare = async () => {
+    const shareData = {
+      title: 'Ricardo Routine',
+      text: 'My offline gym routine app',
+      url: window.location.origin,
+    };
+    if (navigator.share) {
+      try { await navigator.share(shareData); } catch {}
+    } else {
+      await navigator.clipboard.writeText(window.location.origin);
+      toast({ title: 'Link copied' });
+    }
+  };
+
+  const getInstallHint = () => {
+    if (isInstalled) return null;
+    if (installPrompt) return null;
+    if (isIOS) return 'Open in Safari → Share → Add to Home Screen';
+    if (isAndroid) return 'Menu (⋮) → Install app / Add to Home Screen';
+    return 'Use Chrome or Safari on mobile to install';
+  };
 
   const handleExport = () => {
     const json = onExport();
@@ -134,6 +159,43 @@ export function SettingsPage({ settings, hydrated, workoutsCount, onUpdateSettin
         Import Backup (JSON)
       </button>
       <input ref={fileRef} type="file" accept=".json" className="hidden" onChange={handleImport} />
+
+      {/* Install / Share */}
+      <div className="bg-card rounded-xl p-4 space-y-3">
+        <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Install / Share</p>
+        <div className="flex gap-3">
+          {isInstalled ? (
+            <button disabled className="flex-1 flex items-center justify-center gap-2 bg-secondary text-muted-foreground font-medium py-3 rounded-xl opacity-60">
+              <Smartphone size={18} /> Already installed
+            </button>
+          ) : (
+            <button
+              onClick={installPrompt ? promptInstall : undefined}
+              disabled={!installPrompt}
+              className={cn(
+                'flex-1 flex items-center justify-center gap-2 font-medium py-3 rounded-xl transition-transform',
+                installPrompt
+                  ? 'bg-primary text-primary-foreground active:scale-[0.98]'
+                  : 'bg-secondary text-muted-foreground opacity-60'
+              )}
+            >
+              <Smartphone size={18} /> Install App
+            </button>
+          )}
+          <button
+            onClick={handleShare}
+            className="flex-1 flex items-center justify-center gap-2 bg-card text-foreground font-medium py-3 rounded-xl border border-secondary active:scale-[0.98] transition-transform"
+          >
+            <Share2 size={18} /> Share App
+          </button>
+        </div>
+        {getInstallHint() && (
+          <p className="text-xs text-muted-foreground text-center">{getInstallHint()}</p>
+        )}
+        {!navigator.share && (
+          <p className="text-xs text-muted-foreground text-center">Share copies the link to clipboard</p>
+        )}
+      </div>
 
       {/* Debug Section */}
       <div className="bg-card rounded-xl p-4 space-y-2">
