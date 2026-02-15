@@ -1,4 +1,4 @@
-export type WorkoutDay = 'push' | 'pull' | 'legs' | 'full_body' | 'pelvic_reset' | 'posture' | 'balance' | 'mobility_core' | 'strength_maint' | 'cardio_capacity' | 'balance_stability' | 'blueprint_longevity';
+export type WorkoutDay = 'push' | 'pull' | 'legs' | 'full_body' | 'pelvic_reset' | 'posture' | 'balance' | 'bp_day1' | 'bp_day2' | 'bp_day3' | 'bp_day4' | 'bp_day5' | 'bp_day6' | 'bp_day7';
 
 export const DAY_NAMES: Record<WorkoutDay, string> = {
   push: 'Push Day',
@@ -8,11 +8,13 @@ export const DAY_NAMES: Record<WorkoutDay, string> = {
   pelvic_reset: 'Pelvic Reset',
   posture: 'Posture',
   balance: 'Balance & Longevity',
-  mobility_core: 'Daily Mobility & Core',
-  strength_maint: 'Strength Maintenance',
-  cardio_capacity: 'Cardio & Capacity',
-  balance_stability: 'Balance & Stability',
-  blueprint_longevity: 'Blueprint Longevity',
+  bp_day1: 'Day 1 — Strength + Zone 2',
+  bp_day2: 'Day 2 — HIIT + Zone 2',
+  bp_day3: 'Day 3 — Mobility + Strength + Yoga',
+  bp_day4: 'Day 4 — HIIT 60/60',
+  bp_day5: 'Day 5 — Strength',
+  bp_day6: 'Day 6 — Norwegian 4×4',
+  bp_day7: 'Day 7 — Active Recovery',
 };
 
 export const DAY_ORDER: WorkoutDay[] = ['push', 'pull', 'legs'];
@@ -27,8 +29,7 @@ export const PROGRAM_DAY_ORDERS: Record<string, WorkoutDay[]> = {
   pelvic_reset: ['pelvic_reset'],
   posture_routine: ['posture'],
   balance_longevity: ['balance'],
-  longevity_protocol: ['mobility_core', 'strength_maint', 'cardio_capacity', 'balance_stability'],
-  blueprint_longevity: ['blueprint_longevity'],
+  blueprint_bryan: ['bp_day1', 'bp_day2', 'bp_day3', 'bp_day4', 'bp_day5', 'bp_day6', 'bp_day7'],
 };
 
 export interface Exercise {
@@ -148,12 +149,12 @@ export const DEFAULT_PROGRAMS: Program[] = [
     category: 'main',
   },
   {
-    id: 'blueprint_longevity',
-    name: 'Blueprint Longevity',
+    id: 'blueprint_bryan',
+    name: 'Blueprint (Bryan Johnson)',
     type: 'full_body',
     isActive: false,
-    equipment: ['Dumbbells', 'Bench', 'Bodyweight'],
-    workoutDays: ['Blueprint Longevity'],
+    equipment: ['Bodyweight', 'Dumbbells', 'Bench', 'Cardio', 'Mobility'],
+    workoutDays: ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5', 'Day 6', 'Day 7'],
     rotationIndex: 0,
     category: 'main',
   },
@@ -187,17 +188,6 @@ export const DEFAULT_PROGRAMS: Program[] = [
     workoutDays: ['Balance'],
     rotationIndex: 0,
     category: 'complementary',
-  },
-  // ─── Longevity ───
-  {
-    id: 'longevity_protocol',
-    name: 'Longevity Protocol',
-    type: 'full_body',
-    isActive: false,
-    equipment: ['Bodyweight', 'Dumbbells', 'Cable', 'Bench'],
-    workoutDays: ['Mobility & Core', 'Strength', 'Cardio', 'Balance'],
-    rotationIndex: 0,
-    category: 'longevity',
   },
 ];
 
@@ -310,18 +300,73 @@ export const BASE_EXERCISES: Exercise[] = [
   { id: 'im_fb9', name: 'Cable Triceps Pushdown', sets: 4, repRange: '10–12', isCompound: false, day: 'full_body', programId: 'full_body_ironmaster' },
   { id: 'im_fb10', name: 'Standing Calf Raise', sets: 4, repRange: '12–15', isCompound: false, day: 'full_body', programId: 'full_body_ironmaster' },
 
-  // ─── BLUEPRINT LONGEVITY (Bryan Johnson — Home) ───
-  { id: 'bp1', name: 'Goblet Squat', sets: 3, repRange: '10–15', isCompound: true, day: 'blueprint_longevity', programId: 'blueprint_longevity' },
-  { id: 'bp2', name: 'Push-Ups or DB Floor Press', sets: 3, repRange: '8–15', isCompound: true, day: 'blueprint_longevity', programId: 'blueprint_longevity' },
-  { id: 'bp3', name: 'DB Romanian Deadlift', sets: 3, repRange: '10–12', isCompound: true, day: 'blueprint_longevity', programId: 'blueprint_longevity' },
-  { id: 'bp4', name: 'One-Arm DB Row', sets: 3, repRange: '10–12 each', isCompound: true, day: 'blueprint_longevity', programId: 'blueprint_longevity' },
-  { id: 'bp5', name: 'DB Overhead Press', sets: 3, repRange: '8–12', isCompound: true, day: 'blueprint_longevity', programId: 'blueprint_longevity' },
-  { id: 'bp6', name: 'Plank or Side Plank', sets: 2, repRange: '30–60s', isCompound: false, day: 'blueprint_longevity', programId: 'blueprint_longevity' },
-  { id: 'bp7', name: 'Bird Dog or Dead Bug', sets: 2, repRange: '10 each side', isCompound: false, day: 'blueprint_longevity', programId: 'blueprint_longevity' },
-  { id: 'bp8', name: 'Single-Leg RDL or Balance', sets: 2, repRange: '8–10 each', isCompound: true, day: 'blueprint_longevity', programId: 'blueprint_longevity' },
-  { id: 'bp9', name: 'Hip Flexor Stretch', sets: 1, repRange: '30s each side', isCompound: false, day: 'blueprint_longevity', programId: 'blueprint_longevity' },
-  { id: 'bp10', name: 'Thoracic Rotation', sets: 1, repRange: '10 each side', isCompound: false, day: 'blueprint_longevity', programId: 'blueprint_longevity' },
-  { id: 'bp11', name: 'Hamstring / Ankle Stretch', sets: 1, repRange: '30s each side', isCompound: false, day: 'blueprint_longevity', programId: 'blueprint_longevity' },
+  // ═══════════════════════════════════════════
+  //  BLUEPRINT (Bryan Johnson) — 7-Day Cycle
+  // ═══════════════════════════════════════════
+
+  // ─── DAY 1: Strength + Zone 2 ───
+  { id: 'bj1_1', name: 'Warm-Up Walk / Cycle', sets: 1, repRange: '5 min', isCompound: false, day: 'bp_day1', programId: 'blueprint_bryan' },
+  { id: 'bj1_2', name: 'Arm Circles', sets: 1, repRange: '30s each', isCompound: false, day: 'bp_day1', programId: 'blueprint_bryan' },
+  { id: 'bj1_3', name: 'Leg Swings', sets: 1, repRange: '10 each', isCompound: false, day: 'bp_day1', programId: 'blueprint_bryan' },
+  { id: 'bj1_4', name: 'High Knees', sets: 1, repRange: '30s', isCompound: false, day: 'bp_day1', programId: 'blueprint_bryan' },
+  { id: 'bj1_5', name: 'Lateral Lunges', sets: 1, repRange: '8 each', isCompound: false, day: 'bp_day1', programId: 'blueprint_bryan' },
+  { id: 'bj1_6', name: 'Goblet Squat', sets: 3, repRange: '10–15', isCompound: true, day: 'bp_day1', programId: 'blueprint_bryan' },
+  { id: 'bj1_7', name: 'Push-Ups', sets: 3, repRange: '8–12', isCompound: true, day: 'bp_day1', programId: 'blueprint_bryan' },
+  { id: 'bj1_8', name: 'Single-Arm Dumbbell Row', sets: 3, repRange: '10–12 each', isCompound: true, day: 'bp_day1', programId: 'blueprint_bryan' },
+  { id: 'bj1_9', name: 'Farmer\'s Carry', sets: 3, repRange: '30s', isCompound: true, day: 'bp_day1', programId: 'blueprint_bryan' },
+  { id: 'bj1_10', name: 'Plank', sets: 3, repRange: '20–30s', isCompound: false, day: 'bp_day1', programId: 'blueprint_bryan' },
+  { id: 'bj1_11', name: 'Single-Leg Balance', sets: 2, repRange: '30s each', isCompound: false, day: 'bp_day1', programId: 'blueprint_bryan' },
+  { id: 'bj1_12', name: 'Bird Dog', sets: 2, repRange: '8 each side', isCompound: false, day: 'bp_day1', programId: 'blueprint_bryan' },
+  { id: 'bj1_13', name: 'Dead Bug', sets: 2, repRange: '8 each side', isCompound: false, day: 'bp_day1', programId: 'blueprint_bryan' },
+  { id: 'bj1_14', name: 'Single-Leg RDL (bodyweight)', sets: 2, repRange: '8 each', isCompound: false, day: 'bp_day1', programId: 'blueprint_bryan' },
+  { id: 'bj1_15', name: 'Zone 2 Cardio', sets: 1, repRange: '25 min', isCompound: false, day: 'bp_day1', programId: 'blueprint_bryan' },
+
+  // ─── DAY 2: HIIT 20/20 + Zone 2 ───
+  { id: 'bj2_1', name: 'HIIT 20s/20s (8 rounds)', sets: 8, repRange: '20s hard / 20s easy', isCompound: false, day: 'bp_day2', programId: 'blueprint_bryan' },
+  { id: 'bj2_2', name: 'Zone 2 Cardio', sets: 1, repRange: '30–40 min', isCompound: false, day: 'bp_day2', programId: 'blueprint_bryan' },
+
+  // ─── DAY 3: Mobility + Strength + Yoga ───
+  { id: 'bj3_1', name: 'Shoulder Circles', sets: 1, repRange: '30s each', isCompound: false, day: 'bp_day3', programId: 'blueprint_bryan' },
+  { id: 'bj3_2', name: 'Wall Slides', sets: 2, repRange: '10', isCompound: false, day: 'bp_day3', programId: 'blueprint_bryan' },
+  { id: 'bj3_3', name: 'Thread the Needle', sets: 2, repRange: '8 each', isCompound: false, day: 'bp_day3', programId: 'blueprint_bryan' },
+  { id: 'bj3_4', name: 'Hip CARs', sets: 2, repRange: '5 each', isCompound: false, day: 'bp_day3', programId: 'blueprint_bryan' },
+  { id: 'bj3_5', name: 'Squat Variation', sets: 3, repRange: '10–12', isCompound: true, day: 'bp_day3', programId: 'blueprint_bryan' },
+  { id: 'bj3_6', name: 'Hinge Variation', sets: 3, repRange: '10–12', isCompound: true, day: 'bp_day3', programId: 'blueprint_bryan' },
+  { id: 'bj3_7', name: 'Push Variation', sets: 3, repRange: '8–12', isCompound: true, day: 'bp_day3', programId: 'blueprint_bryan' },
+  { id: 'bj3_8', name: 'Pull Variation', sets: 3, repRange: '8–12', isCompound: true, day: 'bp_day3', programId: 'blueprint_bryan' },
+  { id: 'bj3_9', name: 'Core Exercise', sets: 2, repRange: '10–15', isCompound: false, day: 'bp_day3', programId: 'blueprint_bryan' },
+  { id: 'bj3_10', name: 'Cat-Cow', sets: 1, repRange: '10 cycles', isCompound: false, day: 'bp_day3', programId: 'blueprint_bryan' },
+  { id: 'bj3_11', name: 'Cobbler Pose', sets: 1, repRange: '60s hold', isCompound: false, day: 'bp_day3', programId: 'blueprint_bryan' },
+  { id: 'bj3_12', name: 'Tree Pose', sets: 1, repRange: '30s each', isCompound: false, day: 'bp_day3', programId: 'blueprint_bryan' },
+  { id: 'bj3_13', name: 'Cobra Pose', sets: 1, repRange: '30s hold', isCompound: false, day: 'bp_day3', programId: 'blueprint_bryan' },
+  { id: 'bj3_14', name: 'Cool-Down Stretch', sets: 1, repRange: '5 min', isCompound: false, day: 'bp_day3', programId: 'blueprint_bryan' },
+
+  // ─── DAY 4: HIIT 60/60 ───
+  { id: 'bj4_1', name: 'Dynamic Warmup', sets: 1, repRange: '5–10 min', isCompound: false, day: 'bp_day4', programId: 'blueprint_bryan' },
+  { id: 'bj4_2', name: 'Balance Drill', sets: 2, repRange: '30s each', isCompound: false, day: 'bp_day4', programId: 'blueprint_bryan' },
+  { id: 'bj4_3', name: 'HIIT 60s/60s (8–10 rounds)', sets: 10, repRange: '60s hard / 60s easy', isCompound: false, day: 'bp_day4', programId: 'blueprint_bryan' },
+
+  // ─── DAY 5: Strength ───
+  { id: 'bj5_1', name: 'Warm-Up Walk / Cycle', sets: 1, repRange: '5 min', isCompound: false, day: 'bp_day5', programId: 'blueprint_bryan' },
+  { id: 'bj5_2', name: 'Dynamic Warmup', sets: 1, repRange: '5 min', isCompound: false, day: 'bp_day5', programId: 'blueprint_bryan' },
+  { id: 'bj5_3', name: 'Lunges', sets: 3, repRange: '10–12 each', isCompound: true, day: 'bp_day5', programId: 'blueprint_bryan' },
+  { id: 'bj5_4', name: 'Overhead Press (Dumbbells)', sets: 3, repRange: '10–12', isCompound: true, day: 'bp_day5', programId: 'blueprint_bryan' },
+  { id: 'bj5_5', name: 'Dumbbell Chest Press', sets: 3, repRange: '10–12', isCompound: true, day: 'bp_day5', programId: 'blueprint_bryan' },
+  { id: 'bj5_6', name: 'Side Plank', sets: 3, repRange: '20–30s each', isCompound: false, day: 'bp_day5', programId: 'blueprint_bryan' },
+  { id: 'bj5_7', name: 'Step-Ups', sets: 3, repRange: '10 each', isCompound: true, day: 'bp_day5', programId: 'blueprint_bryan' },
+  { id: 'bj5_8', name: 'Single-Leg Balance', sets: 2, repRange: '30s each', isCompound: false, day: 'bp_day5', programId: 'blueprint_bryan' },
+  { id: 'bj5_9', name: 'Bird Dog', sets: 2, repRange: '8 each side', isCompound: false, day: 'bp_day5', programId: 'blueprint_bryan' },
+  { id: 'bj5_10', name: 'Toe Touch Drill', sets: 2, repRange: '10', isCompound: false, day: 'bp_day5', programId: 'blueprint_bryan' },
+
+  // ─── DAY 6: Norwegian 4×4 ───
+  { id: 'bj6_1', name: 'Dynamic Warmup', sets: 1, repRange: '5–10 min', isCompound: false, day: 'bp_day6', programId: 'blueprint_bryan' },
+  { id: 'bj6_2', name: 'Balance Drill', sets: 2, repRange: '30s each', isCompound: false, day: 'bp_day6', programId: 'blueprint_bryan' },
+  { id: 'bj6_3', name: '4 min Hard (85–95%)', sets: 4, repRange: '4 min', isCompound: false, day: 'bp_day6', programId: 'blueprint_bryan' },
+  { id: 'bj6_4', name: '3 min Easy (60–70%)', sets: 4, repRange: '3 min', isCompound: false, day: 'bp_day6', programId: 'blueprint_bryan' },
+
+  // ─── DAY 7: Active Recovery ───
+  { id: 'bj7_1', name: 'Gentle Yoga / Stretching', sets: 1, repRange: '20–30 min', isCompound: false, day: 'bp_day7', programId: 'blueprint_bryan' },
+  { id: 'bj7_2', name: 'Mindfulness / Meditation', sets: 1, repRange: '15–20 min', isCompound: false, day: 'bp_day7', programId: 'blueprint_bryan' },
 
   // ─── COMPLEMENTARY: PELVIC RESET ───
   { id: 'c_pr1', name: 'Posterior Pelvic Tilt Hold', sets: 3, repRange: '30s hold', isCompound: false, day: 'pelvic_reset', programId: 'pelvic_reset' },
@@ -338,37 +383,6 @@ export const BASE_EXERCISES: Exercise[] = [
   { id: 'c_bal2', name: 'Step-Back Lunge', sets: 3, repRange: '10 each', isCompound: true, day: 'balance', programId: 'balance_longevity' },
   { id: 'c_bal3', name: 'Slow Calf Raises', sets: 3, repRange: '15–20', isCompound: false, day: 'balance', programId: 'balance_longevity' },
   { id: 'c_bal4', name: 'Farmer Carry', sets: 3, repRange: '30s', isCompound: true, day: 'balance', programId: 'balance_longevity' },
-
-  // ─── LONGEVITY PROTOCOL ───
-  // Module 1: Daily Mobility & Core
-  { id: 'lp_mc1', name: 'Pelvic Tilt (Posterior)', sets: 2, repRange: '10–12', isCompound: false, day: 'mobility_core', programId: 'longevity_protocol' },
-  { id: 'lp_mc2', name: 'Dead Bug', sets: 2, repRange: '8 each side', isCompound: false, day: 'mobility_core', programId: 'longevity_protocol' },
-  { id: 'lp_mc3', name: 'Bird Dog', sets: 2, repRange: '8 each side', isCompound: false, day: 'mobility_core', programId: 'longevity_protocol' },
-  { id: 'lp_mc4', name: 'Cat–Cow Spinal Mobility', sets: 2, repRange: '10 cycles', isCompound: false, day: 'mobility_core', programId: 'longevity_protocol' },
-  { id: 'lp_mc5', name: 'Hip Flexor Stretch', sets: 2, repRange: '30s each', isCompound: false, day: 'mobility_core', programId: 'longevity_protocol' },
-  { id: 'lp_mc6', name: 'Thoracic Extension on Bench', sets: 2, repRange: '10–12', isCompound: false, day: 'mobility_core', programId: 'longevity_protocol' },
-  { id: 'lp_mc7', name: 'Glute Bridge Hold', sets: 2, repRange: '30s hold', isCompound: false, day: 'mobility_core', programId: 'longevity_protocol' },
-
-  // Module 2: Strength Maintenance
-  { id: 'lp_sm1', name: 'Goblet Squat', sets: 3, repRange: '8–10', isCompound: true, day: 'strength_maint', programId: 'longevity_protocol' },
-  { id: 'lp_sm2', name: 'Dumbbell Romanian Deadlift', sets: 3, repRange: '8–10', isCompound: true, day: 'strength_maint', programId: 'longevity_protocol' },
-  { id: 'lp_sm3', name: 'Incline Dumbbell Press', sets: 3, repRange: '8–10', isCompound: true, day: 'strength_maint', programId: 'longevity_protocol' },
-  { id: 'lp_sm4', name: 'One-Arm Dumbbell Row', sets: 3, repRange: '8–10', isCompound: true, day: 'strength_maint', programId: 'longevity_protocol' },
-  { id: 'lp_sm5', name: 'Cable Face Pull', sets: 3, repRange: '12–15', isCompound: false, day: 'strength_maint', programId: 'longevity_protocol' },
-  { id: 'lp_sm6', name: 'Standing Dumbbell Overhead Press', sets: 3, repRange: '8–10', isCompound: true, day: 'strength_maint', programId: 'longevity_protocol' },
-
-  // Module 3: Cardio & Capacity
-  { id: 'lp_cc1', name: 'Brisk Walking / March in Place', sets: 2, repRange: '5 min', isCompound: false, day: 'cardio_capacity', programId: 'longevity_protocol' },
-  { id: 'lp_cc2', name: 'Step-Ups on Bench', sets: 3, repRange: '10 each', isCompound: true, day: 'cardio_capacity', programId: 'longevity_protocol' },
-  { id: 'lp_cc3', name: 'Farmer Carry', sets: 3, repRange: '30–45s', isCompound: true, day: 'cardio_capacity', programId: 'longevity_protocol' },
-  { id: 'lp_cc4', name: 'Light Intervals (optional)', sets: 2, repRange: '30s on / 30s off', isCompound: false, day: 'cardio_capacity', programId: 'longevity_protocol' },
-
-  // Module 4: Balance & Stability
-  { id: 'lp_bs1', name: 'Single-Leg Stand', sets: 2, repRange: '30s each', isCompound: false, day: 'balance_stability', programId: 'longevity_protocol' },
-  { id: 'lp_bs2', name: 'Single-Leg Romanian Deadlift (light)', sets: 2, repRange: '8 each', isCompound: true, day: 'balance_stability', programId: 'longevity_protocol' },
-  { id: 'lp_bs3', name: 'Heel-to-Toe Walk', sets: 2, repRange: '20 steps', isCompound: false, day: 'balance_stability', programId: 'longevity_protocol' },
-  { id: 'lp_bs4', name: 'Side Plank', sets: 2, repRange: '20–30s each', isCompound: false, day: 'balance_stability', programId: 'longevity_protocol' },
-  { id: 'lp_bs5', name: 'Front Plank', sets: 2, repRange: '30–45s', isCompound: false, day: 'balance_stability', programId: 'longevity_protocol' },
 ];
 
 // ═══════════════════════════════════════════
@@ -434,22 +448,6 @@ export const EXTRA_EXERCISES: Record<string, { id: string; name: string; default
   full_body_ironmaster_full_body: [
     { id: 'extra_im_fb1', name: 'Cable Face Pull', defaultSets: 3, repRange: '12–15', isCompound: false },
     { id: 'extra_im_fb2', name: 'Leg Curl', defaultSets: 3, repRange: '10–12', isCompound: false },
-  ],
-  // Longevity Protocol
-  longevity_protocol_mobility_core: [
-    { id: 'extra_lp_mc1', name: 'Foam Roller Thoracic', defaultSets: 2, repRange: '60s', isCompound: false },
-    { id: 'extra_lp_mc2', name: 'World\'s Greatest Stretch', defaultSets: 2, repRange: '5 each', isCompound: false },
-  ],
-  longevity_protocol_strength_maint: [
-    { id: 'extra_lp_sm1', name: 'Dumbbell Lateral Raise', defaultSets: 2, repRange: '12–15', isCompound: false },
-    { id: 'extra_lp_sm2', name: 'Dumbbell Curl', defaultSets: 2, repRange: '10–12', isCompound: false },
-  ],
-  longevity_protocol_cardio_capacity: [
-    { id: 'extra_lp_cc1', name: 'Jumping Jacks', defaultSets: 2, repRange: '30s', isCompound: false },
-  ],
-  longevity_protocol_balance_stability: [
-    { id: 'extra_lp_bs1', name: 'Wall Sit', defaultSets: 2, repRange: '30s', isCompound: false },
-    { id: 'extra_lp_bs2', name: 'Pallof Press (cable)', defaultSets: 2, repRange: '10 each', isCompound: false },
   ],
 };
 

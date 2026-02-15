@@ -369,42 +369,138 @@ const CUES_MAP: Record<string, ExerciseCueEntry> = {
     cues: ['Stand sideways to cable', 'Press hands straight out', 'Resist rotation', 'Hold 2–3s extended'],
     mistakes: ['Rotating toward cable', 'Using too much weight'],
   },
-  // ─── BLUEPRINT LONGEVITY ───
-  'push-ups or db floor press': {
-    cues: ['Choose push-ups (bodyweight) or DB floor press', 'Keep core tight throughout', 'Full range of motion', 'Control the eccentric'],
-    mistakes: ['Sagging hips on push-ups', 'Bouncing off floor on presses'],
+  // ─── BLUEPRINT (Bryan Johnson) ───
+  'warm-up walk / cycle': {
+    cues: ['Easy pace, raise heart rate gently', 'Walk or stationary bike', '5 minutes is enough'],
   },
-  'db romanian deadlift': {
-    cues: ['Soft knee bend, hinge at hips', 'DBs slide along thighs', 'Feel hamstring stretch', 'Drive hips forward to stand'],
-    mistakes: ['Rounding lower back', 'Bending knees too much'],
+  'arm circles': {
+    cues: ['Small circles → large circles', 'Forward then backward', 'Keep shoulders relaxed'],
   },
-  'one-arm db row': {
+  'leg swings': {
+    cues: ['Hold wall for support', 'Swing front-to-back and side-to-side', 'Keep core engaged'],
+  },
+  'high knees': {
+    cues: ['Drive knees to hip height', 'Pump arms', 'Stay light on feet', 'Keep core tight'],
+  },
+  'lateral lunges': {
+    cues: ['Step wide to the side', 'Sit back into hip', 'Keep opposite leg straight', 'Push back to start'],
+    mistakes: ['Knee caving inward', 'Leaning too far forward'],
+  },
+  'push-ups': {
+    cues: ['Hands shoulder-width apart', 'Body straight head to heels', 'Lower chest to floor', 'Full extension at top'],
+    mistakes: ['Sagging hips', 'Flaring elbows past 45°', 'Partial range of motion'],
+  },
+  'single-arm dumbbell row': {
     cues: ['Flat back, core braced', 'Pull elbow toward hip', 'Squeeze shoulder blade at top', 'Full stretch at bottom'],
     mistakes: ['Rotating torso', 'Pulling with bicep only'],
   },
-  'db overhead press': {
-    cues: ['Core braced, ribs down', 'Press straight overhead', 'Full lockout at top', 'Lower to ear level with control'],
-    mistakes: ['Excessive back arch', 'Using leg drive'],
+  "farmer's carry": {
+    cues: ['Heavy dumbbells at sides', 'Shoulders back and down', 'Walk with purpose, core tight', 'Short controlled steps'],
+    mistakes: ['Leaning to one side', 'Shrugging shoulders'],
   },
-  'plank or side plank': {
-    cues: ['Choose front plank or side plank', 'Body straight from head to heels', 'Engage glutes and core', 'Breathe steadily throughout'],
+  'plank': {
+    cues: ['Forearms on floor', 'Body straight head to heels', 'Engage glutes and core', 'Breathe steadily'],
     mistakes: ['Hips sagging or piking', 'Holding breath'],
   },
-  'bird dog or dead bug': {
-    cues: ['Choose bird dog (all fours) or dead bug (supine)', 'Opposite arm and leg extend', 'Keep hips and spine stable', 'Move slowly and controlled'],
-    mistakes: ['Rotating hips', 'Arching lower back'],
+  'single-leg balance': {
+    cues: ['Stand on one foot', 'Eyes forward, core tight', 'Keep hip level', 'Use arms for balance if needed'],
+    mistakes: ['Leaning to one side', 'Looking down'],
   },
-  'single-leg rdl or balance': {
-    cues: ['Soft knee on standing leg', 'Hinge forward or hold balance', 'Keep hips square', 'Return with control'],
-    mistakes: ['Opening hips to the side', 'Rounding back'],
+  'single-leg rdl (bodyweight)': {
+    cues: ['Soft knee on standing leg', 'Hinge forward, reach back leg', 'Keep hips square', 'Return with control'],
+    mistakes: ['Opening hips', 'Rounding back'],
   },
-  'thoracic rotation': {
-    cues: ['All fours or seated position', 'Hand behind head, rotate toward ceiling', 'Follow hand with eyes', 'Controlled return'],
-    mistakes: ['Rotating from lower back', 'Rushing the movement'],
+  'zone 2 cardio': {
+    cues: ['Conversational pace', 'Brisk walk, easy jog, bike, swim, or elliptical', 'Steady effort, nose breathing preferred', 'Maintain for full duration'],
   },
-  'hamstring / ankle stretch': {
-    cues: ['Straight leg stretch for hamstrings', 'Wall or step stretch for ankles', 'Hold steady, breathe deeply', 'No bouncing'],
-    mistakes: ['Rounding back to reach toes', 'Holding breath'],
+  'hiit 20s/20s (8 rounds)': {
+    cues: ['20s all-out effort', '20s easy recovery', 'Choose: sprints, bike, or bodyweight', 'Beginner option: 20s hard / 40s easy'],
+    mistakes: ['Starting too hard to sustain 8 rounds', 'Skipping recovery periods'],
+  },
+  'shoulder circles': {
+    cues: ['Slow controlled circles', 'Forward then backward', 'Gradually increase range'],
+  },
+  'thread the needle': {
+    cues: ['Start on all fours', 'Reach one arm under body', 'Rotate thoracic spine', 'Follow hand with eyes'],
+    mistakes: ['Rushing the movement', 'Rotating from lower back'],
+  },
+  'hip cars': {
+    cues: ['Controlled articular rotations', 'Knee up, out, back in full circle', 'Keep hips level', 'Slow and controlled'],
+    mistakes: ['Moving too fast', 'Compensating with lower back'],
+  },
+  'squat variation': {
+    cues: ['Choose goblet, sumo, or bodyweight squat', 'Sit back and down', 'Knees track over toes', 'Full depth with control'],
+  },
+  'hinge variation': {
+    cues: ['Choose RDL, good morning, or KB swing', 'Hinge at hips, soft knees', 'Feel hamstring stretch', 'Drive hips forward'],
+  },
+  'push variation': {
+    cues: ['Choose push-ups, DB press, or overhead press', 'Full range of motion', 'Control the eccentric'],
+  },
+  'pull variation': {
+    cues: ['Choose rows, pull-ups, or band pull-apart', 'Squeeze shoulder blades', 'Full stretch at bottom'],
+  },
+  'core exercise': {
+    cues: ['Choose plank, dead bug, or pallof press', 'Maintain neutral spine', 'Breathe throughout'],
+  },
+  'cat-cow': {
+    cues: ['Inhale: arch back (cow)', 'Exhale: round spine (cat)', 'Move through full range', 'Slow, controlled rhythm'],
+    mistakes: ['Rushing movements', 'Only moving mid-back'],
+  },
+  'cobbler pose': {
+    cues: ['Sit tall, soles of feet together', 'Let knees fall open', 'Gentle press on knees if comfortable', 'Hold and breathe deeply'],
+  },
+  'tree pose': {
+    cues: ['Foot on inner thigh or calf (not knee)', 'Hands at heart or overhead', 'Fix gaze on a point', 'Engage core for balance'],
+    mistakes: ['Placing foot on knee joint', 'Holding breath'],
+  },
+  'cobra pose': {
+    cues: ['Lie face down, hands under shoulders', 'Press up gently, keep hips on floor', 'Open chest, shoulders back', 'Hold and breathe'],
+    mistakes: ['Pushing up too high', 'Tensing shoulders'],
+  },
+  'cool-down stretch': {
+    cues: ['Hold each stretch 30s', 'Focus on tight areas', 'Breathe deeply', 'No bouncing'],
+  },
+  'dynamic warmup': {
+    cues: ['Arm circles, leg swings, high knees', 'Gradually increase intensity', '5–10 minutes total'],
+  },
+  'balance drill': {
+    cues: ['Single-leg stand or heel-to-toe walk', 'Eyes forward, core engaged', 'Alternate sides'],
+  },
+  'hiit 60s/60s (8–10 rounds)': {
+    cues: ['60s hard effort (jumping jacks, high knees, burpees, mountain climbers)', '60s easy walking recovery', 'Pick 1–2 movements per round', 'Maintain form even when tired'],
+    mistakes: ['Going too hard early', 'Cutting recovery short'],
+  },
+  'lunges': {
+    cues: ['Long stride forward or backward', 'Back knee nearly touches floor', 'Front shin stays vertical', 'Drive through front heel'],
+    mistakes: ['Short strides', 'Front knee caving inward'],
+  },
+  'overhead press (dumbbells)': {
+    cues: ['Core braced, ribs down', 'Press straight overhead', 'Full lockout at top', 'Lower to ear level'],
+    mistakes: ['Excessive back arch', 'Using leg drive'],
+  },
+  'dumbbell chest press': {
+    cues: ['Plant feet flat', 'Retract shoulder blades', 'Press up and slightly inward', 'Control descent 2–3s'],
+    mistakes: ['Flaring elbows', 'Bouncing off chest', 'Lifting hips'],
+  },
+  'step-ups': {
+    cues: ['Full foot on bench', 'Drive through heel', 'Stand fully at top', 'Lower with control'],
+    mistakes: ['Pushing off back foot', 'Leaning forward'],
+  },
+  'toe touch drill': {
+    cues: ['Stand tall, reach down toward toes', 'Keep legs straight or slightly bent', 'Feel hamstring stretch', 'Return slowly'],
+  },
+  '4 min hard (85–95%)': {
+    cues: ['Treadmill, bike, or rower', '85–95% max heart rate effort', 'Sustainable hard pace for 4 min', 'Focus on breathing rhythm'],
+  },
+  '3 min easy (60–70%)': {
+    cues: ['Active recovery, keep moving', '60–70% effort', 'Walk or easy pedal', 'Recover heart rate before next interval'],
+  },
+  'gentle yoga / stretching': {
+    cues: ['Mobility-focused, no intensity', 'Hold stretches 30–60s', 'Focus on breath', 'Cover all major muscle groups'],
+  },
+  'mindfulness / meditation': {
+    cues: ['Find a quiet space', 'Focus on breathing', 'Body scan or guided meditation', '15–20 minutes'],
   },
 };
 
