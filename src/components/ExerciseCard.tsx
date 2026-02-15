@@ -31,7 +31,11 @@ export function ExerciseCard({
 }: ExerciseCardProps) {
   const [showSwap, setShowSwap] = useState(false);
   const [showMedia, setShowMedia] = useState(false);
+  // Inline reps editor (tap circle)
+  const [editingRepsSet, setEditingRepsSet] = useState<number | null>(null);
+  // Inline weight editor (tap weight label)
   const [editingWeightSet, setEditingWeightSet] = useState<number | null>(null);
+  // Full edit modal (long press)
   const [editingSet, setEditingSet] = useState<number | null>(null);
   const [editReps, setEditReps] = useState(0);
   const [editWeight, setEditWeight] = useState(0);
@@ -71,21 +75,19 @@ export function ExerciseCard({
     }
     if (didLongPress.current) {
       didLongPress.current = false;
-      return; // long press handled
+      return;
     }
-    // Normal tap
+    // Normal tap on circle → edit reps only (or toggle done if already done)
     const set = currentSets[i];
     if (set.done) {
+      // Tap completed set → uncomplete it
       onSetDone(i);
       return;
     }
-    if (isAmrap(i)) {
-      setAmrapReps(set.reps || 8);
-      setAmrapSet(i);
-    } else {
-      onSetDone(i);
-    }
-  }, [currentSets, onSetDone]);
+    // Open inline reps editor for this set
+    setEditingRepsSet(editingRepsSet === i ? null : i);
+    setEditingWeightSet(null);
+  }, [currentSets, onSetDone, editingRepsSet]);
 
   const handlePointerLeave = useCallback(() => {
     if (longPressTimer.current) {
@@ -122,6 +124,17 @@ export function ExerciseCard({
     onSetsCountChange(currentSets.length + 1);
   }, [currentSets.length, onSetsCountChange]);
 
+  const handleMarkDone = (i: number) => {
+    if (isAmrap(i)) {
+      setAmrapReps(currentSets[i].reps || 8);
+      setAmrapSet(i);
+    } else {
+      onSetDone(i);
+    }
+    setEditingRepsSet(null);
+    setEditingWeightSet(null);
+  };
+
   return (
     <div className={cn("bg-card rounded-lg p-4 space-y-3", isSwapped && "ring-1 ring-primary/30")}>
       {/* Substitute badge */}
@@ -147,7 +160,12 @@ export function ExerciseCard({
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1">
           <div className="flex items-center gap-2">
-            <h3 className="font-bold text-foreground text-base">{name}</h3>
+            <h3
+              className={cn("font-bold text-foreground text-base", mediaUrl && "active:text-primary cursor-pointer")}
+              onClick={() => { if (mediaUrl) setShowMedia(!showMedia); }}
+            >
+              {name}
+            </h3>
             {isPR && (
               <span className="flex items-center gap-1 bg-primary/20 text-primary text-xs font-bold px-2 py-0.5 rounded-full">
                 <Trophy size={10} />
@@ -195,10 +213,16 @@ export function ExerciseCard({
         </div>
       )}
 
-      {/* Media preview */}
+      {/* Media preview (demo) */}
       {showMedia && mediaUrl && (
-        <div className="rounded-lg overflow-hidden">
+        <div className="relative rounded-lg overflow-hidden">
           <img src={mediaUrl} alt={name} className="w-full h-32 object-cover" />
+          <button
+            onClick={() => setShowMedia(false)}
+            className="absolute top-1 right-1 bg-black/60 rounded-full p-1"
+          >
+            <X size={14} className="text-white" />
+          </button>
         </div>
       )}
 
@@ -214,7 +238,9 @@ export function ExerciseCard({
                 'w-14 h-14 rounded-full flex items-center justify-center transition-all border-2 select-none touch-manipulation',
                 set.done
                   ? 'bg-primary border-primary'
-                  : 'bg-transparent border-muted-foreground/40'
+                  : editingRepsSet === i
+                    ? 'bg-primary/20 border-primary'
+                    : 'bg-transparent border-muted-foreground/40'
               )}
             >
               {set.done ? (
@@ -226,7 +252,10 @@ export function ExerciseCard({
 
             {/* Per-set weight below circle */}
             <button
-              onClick={() => setEditingWeightSet(editingWeightSet === i ? null : i)}
+              onClick={() => {
+                setEditingWeightSet(editingWeightSet === i ? null : i);
+                setEditingRepsSet(null);
+              }}
               className={cn(
                 'text-xs font-medium text-center leading-tight min-w-[40px] py-0.5 rounded',
                 editingWeightSet === i ? 'bg-primary/20 text-primary' : 'text-muted-foreground'
@@ -250,7 +279,47 @@ export function ExerciseCard({
         )}
       </div>
 
-      {/* Per-set weight editor */}
+      {/* Inline reps editor (tap circle) */}
+      {editingRepsSet !== null && !currentSets[editingRepsSet]?.done && (
+        <div className="bg-secondary rounded-lg p-3 space-y-2">
+          <p className="text-xs text-muted-foreground font-semibold uppercase text-center">
+            Set {editingRepsSet + 1} — Reps
+          </p>
+          <div className="flex items-center justify-center gap-4">
+            <button
+              onClick={() => onSetChange(editingRepsSet, 'reps', Math.max(1, currentSets[editingRepsSet].reps - 1))}
+              className="w-10 h-10 rounded-full bg-card text-foreground flex items-center justify-center active:bg-primary/30"
+            >
+              <Minus size={18} />
+            </button>
+            <span className="text-3xl font-black text-foreground tabular-nums min-w-[50px] text-center">
+              {currentSets[editingRepsSet].reps}
+            </span>
+            <button
+              onClick={() => onSetChange(editingRepsSet, 'reps', currentSets[editingRepsSet].reps + 1)}
+              className="w-10 h-10 rounded-full bg-card text-foreground flex items-center justify-center active:bg-primary/30"
+            >
+              <Plus size={18} />
+            </button>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setEditingRepsSet(null)}
+              className="flex-1 text-center text-xs text-muted-foreground py-2"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => handleMarkDone(editingRepsSet)}
+              className="flex-1 bg-primary text-primary-foreground font-bold py-2 rounded-lg text-sm flex items-center justify-center gap-1"
+            >
+              <Check size={14} /> Done
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Per-set weight editor (tap weight label) */}
       {editingWeightSet !== null && (
         <div className="bg-secondary rounded-lg p-3 space-y-3">
           <p className="text-xs text-muted-foreground font-semibold uppercase text-center">
@@ -267,7 +336,7 @@ export function ExerciseCard({
               {currentSets[editingWeightSet].weight}<span className="text-sm text-muted-foreground ml-1">kg</span>
             </span>
             <button
-              onClick={() => onSetChange(editingWeightSet, 'weight', Math.min(32, currentSets[editingWeightSet].weight + 2))}
+              onClick={() => onSetChange(editingWeightSet, 'weight', Math.min(200, currentSets[editingWeightSet].weight + 2))}
               className="w-10 h-10 rounded-full bg-card text-foreground flex items-center justify-center active:bg-primary/30"
             >
               <Plus size={18} />
@@ -293,7 +362,7 @@ export function ExerciseCard({
         </div>
       )}
 
-      {/* Long-press Edit Modal */}
+      {/* Long-press Edit Modal (both reps + weight) */}
       {editingSet !== null && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70" onClick={() => setEditingSet(null)}>
           <div className="bg-card rounded-xl p-6 w-80 space-y-5" onClick={e => e.stopPropagation()}>
@@ -335,25 +404,11 @@ export function ExerciseCard({
                   {editWeight}<span className="text-sm text-muted-foreground ml-1">kg</span>
                 </span>
                 <button
-                  onClick={() => setEditWeight(Math.min(32, editWeight + 2))}
+                  onClick={() => setEditWeight(Math.min(200, editWeight + 2))}
                   className="w-12 h-12 rounded-full bg-secondary text-foreground flex items-center justify-center"
                 >
                   <Plus size={20} />
                 </button>
-              </div>
-              <div className="grid grid-cols-8 gap-1">
-                {WEIGHT_PICKS.map(w => (
-                  <button
-                    key={w}
-                    onClick={() => setEditWeight(w)}
-                    className={cn(
-                      'py-1.5 rounded text-xs font-bold transition-colors',
-                      editWeight === w ? 'bg-primary text-primary-foreground' : 'bg-secondary text-foreground'
-                    )}
-                  >
-                    {w}
-                  </button>
-                ))}
               </div>
             </div>
 
