@@ -428,52 +428,6 @@ export const EXTRA_EXERCISES: Record<string, { id: string; name: string; default
   ],
 };
 
-// ═══════════════════════════════════════════
-//  EXERCISE EQUIVALENTS — Swap alternatives
-// ═══════════════════════════════════════════
-
-export const EXERCISE_EQUIVALENTS: Record<string, { id: string; name: string; sets: number; repRange: string; isCompound: boolean }[]> = {
-  // Dumbbell PPL
-  push1: [{ id: 'push1_alt1', name: 'Floor Dumbbell Press', sets: 4, repRange: '6–8', isCompound: true }],
-  push2: [{ id: 'push2_alt1', name: 'Decline Dumbbell Press', sets: 4, repRange: '8–10', isCompound: true }],
-  push3: [{ id: 'push3_alt1', name: 'Arnold Press', sets: 4, repRange: '8–10', isCompound: true }],
-  push4: [{ id: 'push4_alt1', name: 'Front Raise', sets: 4, repRange: '12–15', isCompound: false }],
-  push5: [{ id: 'push5_alt1', name: 'Triceps Kickback', sets: 4, repRange: '10–12', isCompound: false }],
-  pull1: [{ id: 'pull1_alt1', name: 'Bent-Over Dumbbell Row', sets: 4, repRange: '6–8', isCompound: true }],
-  pull2: [{ id: 'pull2_alt1', name: 'Dumbbell Pullover', sets: 4, repRange: '8–10', isCompound: true }],
-  pull3: [{ id: 'pull3_alt1', name: 'Band Pull-Apart', sets: 4, repRange: '15–20', isCompound: false }],
-  pull4: [{ id: 'pull4_alt1', name: 'Cross Body Curl', sets: 4, repRange: '10–12', isCompound: false }],
-  pull5: [{ id: 'pull5_alt1', name: 'Concentration Curl', sets: 4, repRange: '10–12', isCompound: false }],
-  legs1: [{ id: 'legs1_alt1', name: 'Sumo Squat', sets: 4, repRange: '8–10', isCompound: true }],
-  legs2: [{ id: 'legs2_alt1', name: 'Reverse Lunge', sets: 4, repRange: '8 each', isCompound: true }],
-  legs3: [{ id: 'legs3_alt1', name: 'Single Leg RDL', sets: 4, repRange: '8–10', isCompound: true }],
-  legs4: [{ id: 'legs4_alt1', name: 'Glute Bridge', sets: 4, repRange: '10–12', isCompound: true }],
-  legs5: [{ id: 'legs5_alt1', name: 'Seated Calf Raise', sets: 4, repRange: '15–20', isCompound: false }],
-  // Dumbbell Full Body
-  fb1: [{ id: 'fb1_alt1', name: 'Floor Dumbbell Press', sets: 4, repRange: '6–8', isCompound: true }],
-  fb2: [{ id: 'fb2_alt1', name: 'Bent-Over Dumbbell Row', sets: 4, repRange: '6–8', isCompound: true }],
-  fb3: [{ id: 'fb3_alt1', name: 'Sumo Squat', sets: 4, repRange: '8–10', isCompound: true }],
-  fb4: [{ id: 'fb4_alt1', name: 'Stiff Leg Deadlift', sets: 4, repRange: '8–10', isCompound: true }],
-  fb5: [{ id: 'fb5_alt1', name: 'Arnold Press', sets: 4, repRange: '8–10', isCompound: true }],
-  fb7: [{ id: 'fb7_alt1', name: 'Hammer Curl', sets: 4, repRange: '10–12', isCompound: false }],
-  fb8: [{ id: 'fb8_alt1', name: 'Triceps Kickback', sets: 4, repRange: '10–12', isCompound: false }],
-  // EZ Bar
-  ez_push1: [{ id: 'ez_push1_alt1', name: 'Dumbbell Floor Press', sets: 4, repRange: '6–8', isCompound: true }],
-  ez_push3: [{ id: 'ez_push3_alt1', name: 'Overhead Triceps Extension', sets: 4, repRange: '10–12', isCompound: false }],
-  ez_pull1: [{ id: 'ez_pull1_alt1', name: 'One-Arm Dumbbell Row', sets: 4, repRange: '6–8', isCompound: true }],
-  ez_pull2: [{ id: 'ez_pull2_alt1', name: 'Dumbbell Curl', sets: 4, repRange: '10–12', isCompound: false }],
-  ez_legs1: [{ id: 'ez_legs1_alt1', name: 'Dumbbell Romanian Deadlift', sets: 4, repRange: '8–10', isCompound: true }],
-  // Ironmaster
-  im_push4: [{ id: 'im_push4_alt1', name: 'Overhead Triceps Extension', sets: 4, repRange: '10–12', isCompound: false }],
-  im_pull1: [{ id: 'im_pull1_alt1', name: 'Dumbbell Pullover', sets: 4, repRange: '8–10', isCompound: true }],
-  im_pull2: [{ id: 'im_pull2_alt1', name: 'One-Arm Dumbbell Row', sets: 4, repRange: '8–10', isCompound: true }],
-  im_pull4: [{ id: 'im_pull4_alt1', name: 'Dumbbell Rear Delt Raise', sets: 4, repRange: '12–15', isCompound: false }],
-  im_legs3: [{ id: 'im_legs3_alt1', name: 'Walking Lunges', sets: 4, repRange: '10 each', isCompound: true }],
-  im_legs4: [{ id: 'im_legs4_alt1', name: 'Dumbbell RDL', sets: 4, repRange: '8–10', isCompound: true }],
-  im_fb2: [{ id: 'im_fb2_alt1', name: 'Dumbbell Pullover', sets: 4, repRange: '8–10', isCompound: true }],
-  im_fb3: [{ id: 'im_fb3_alt1', name: 'One-Arm Dumbbell Row', sets: 4, repRange: '8–10', isCompound: true }],
-  im_fb9: [{ id: 'im_fb9_alt1', name: 'Overhead Triceps Extension', sets: 4, repRange: '10–12', isCompound: false }],
-};
 
 export const DEFAULT_APP_DATA: AppData = {
   nextDayIndex: 0,
