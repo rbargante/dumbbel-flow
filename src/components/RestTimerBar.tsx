@@ -36,9 +36,17 @@ export function RestTimerBar({ secondsLeft, totalSeconds, onStop, onAdjust, onSe
               <Plus size={14} />
             </button>
           </div>
-          <button onClick={onStop} className="p-1">
-            <X size={20} />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={onStop}
+              className="px-3 py-1 rounded-full bg-primary-foreground/20 text-xs font-bold"
+            >
+              Skip
+            </button>
+            <button onClick={onStop} className="p-1">
+              <X size={20} />
+            </button>
+          </div>
         </div>
 
         {/* Easy / Hard quick picks */}

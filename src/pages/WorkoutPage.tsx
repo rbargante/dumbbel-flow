@@ -7,7 +7,7 @@ import { ExerciseCard } from '@/components/ExerciseCard';
 import { RestTimerBar } from '@/components/RestTimerBar';
 import { useRestTimer } from '@/hooks/useRestTimer';
 import { saveState } from '@/lib/storage';
-import { Plus, Timer, Dumbbell, Home } from 'lucide-react';
+import { Plus, Timer, Dumbbell, Home, ArrowLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface WorkoutPageProps {
@@ -46,6 +46,7 @@ export function WorkoutPage({ data, programId, onFinish, onHome }: WorkoutPagePr
   const startTimeRef = useRef(Date.now());
   const [elapsed, setElapsed] = useState(0);
   const [skipWarmup, setSkipWarmup] = useState(false);
+  const [showExitDialog, setShowExitDialog] = useState(false);
 
   const [exercises, setExercises] = useState<ActiveExercise[]>(() =>
     baseExercises.map(ex => ({
@@ -203,16 +204,16 @@ export function WorkoutPage({ data, programId, onFinish, onHome }: WorkoutPagePr
   };
 
   const addExtra = (extra: typeof extras[0]) => {
-      const exData: Exercise = {
-        id: `${extra.id}_${Date.now()}`,
-        name: extra.name,
-        sets: extra.defaultSets,
-        repRange: extra.repRange,
-        isCompound: extra.isCompound,
-        day,
-        programId,
-      };
-      const newEx: ActiveExercise = {
+    const exData: Exercise = {
+      id: `${extra.id}_${Date.now()}`,
+      name: extra.name,
+      sets: extra.defaultSets,
+      repRange: extra.repRange,
+      isCompound: extra.isCompound,
+      day,
+      programId,
+    };
+    const newEx: ActiveExercise = {
       exercise: exData,
       originalExercise: exData,
       isSwapped: false,
@@ -248,6 +249,27 @@ export function WorkoutPage({ data, programId, onFinish, onHome }: WorkoutPagePr
     onFinish(workout);
   };
 
+  const handleBack = () => {
+    const hasDoneSets = exercises.some(ex => ex.sets.some(s => s.done));
+    if (hasDoneSets) {
+      setShowExitDialog(true);
+    } else {
+      // No progress, just leave
+      timer.stop();
+      onHome?.();
+    }
+  };
+
+  const handleSaveAndExit = () => {
+    finish();
+  };
+
+  const handleDiscard = () => {
+    timer.stop();
+    setShowExitDialog(false);
+    onHome?.();
+  };
+
   const totalExercises = exercises.length;
 
   return (
@@ -261,11 +283,9 @@ export function WorkoutPage({ data, programId, onFinish, onHome }: WorkoutPagePr
       />
 
       <div className="flex items-center justify-between">
-        {onHome && (
-          <button onClick={onHome} className="p-2 -ml-2 rounded-lg active:bg-secondary transition-colors">
-            <Home size={20} className="text-muted-foreground" />
-          </button>
-        )}
+        <button onClick={handleBack} className="p-2 -ml-2 rounded-lg active:bg-secondary transition-colors">
+          <ArrowLeft size={20} className="text-muted-foreground" />
+        </button>
         <h1 className="text-2xl font-black text-foreground">{DAY_NAMES[day]}</h1>
         <div />
       </div>
@@ -364,6 +384,36 @@ export function WorkoutPage({ data, programId, onFinish, onHome }: WorkoutPagePr
           FINISH WORKOUT
         </button>
       </div>
+
+      {/* Exit confirmation dialog */}
+      {showExitDialog && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/70" onClick={() => setShowExitDialog(false)}>
+          <div className="bg-card rounded-xl p-6 w-80 space-y-4" onClick={e => e.stopPropagation()}>
+            <h3 className="text-lg font-black text-foreground text-center">Leave Workout?</h3>
+            <p className="text-sm text-muted-foreground text-center">You have completed sets. What would you like to do?</p>
+            <div className="space-y-2">
+              <button
+                onClick={handleSaveAndExit}
+                className="w-full bg-primary text-primary-foreground font-bold py-3 rounded-lg"
+              >
+                Save & Exit
+              </button>
+              <button
+                onClick={handleDiscard}
+                className="w-full bg-secondary text-foreground font-bold py-3 rounded-lg"
+              >
+                Discard
+              </button>
+              <button
+                onClick={() => setShowExitDialog(false)}
+                className="w-full text-center text-sm text-muted-foreground py-2"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
