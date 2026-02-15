@@ -1,9 +1,8 @@
 import { AppSettings, AppData, BASE_EXERCISES } from '@/data/exercises';
-import { Download, Upload, Trash2 } from 'lucide-react';
-import { useRef, useState, useEffect } from 'react';
+import { Download, Upload } from 'lucide-react';
+import { useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { getLastSaved } from '@/lib/storage';
-import { getDemoCacheStats, clearDemoCache } from '@/lib/demoCache';
 
 interface SettingsPageProps {
   settings: AppSettings;
@@ -14,14 +13,17 @@ interface SettingsPageProps {
   onImport: (data: AppData) => void;
 }
 
-function Toggle({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) {
+function Toggle({ label, checked, onChange, description }: { label: string; checked: boolean; onChange: (v: boolean) => void; description?: string }) {
   return (
     <div className="flex items-center justify-between bg-card rounded-xl p-4">
-      <span className="font-medium text-foreground">{label}</span>
+      <div className="flex-1">
+        <span className="font-medium text-foreground">{label}</span>
+        {description && <p className="text-xs text-muted-foreground mt-0.5">{description}</p>}
+      </div>
       <button
         onClick={() => onChange(!checked)}
         className={cn(
-          'w-12 h-7 rounded-full transition-colors relative',
+          'w-12 h-7 rounded-full transition-colors relative shrink-0 ml-3',
           checked ? 'bg-primary' : 'bg-secondary'
         )}
       >
@@ -34,20 +36,30 @@ function Toggle({ label, checked, onChange }: { label: string; checked: boolean;
   );
 }
 
+// Local state for demo toggle (not persisted in AppSettings for now)
+const DEMO_TOGGLE_KEY = 'exercise_demos_enabled';
+
+function getDemoToggle(): boolean {
+  try {
+    return localStorage.getItem(DEMO_TOGGLE_KEY) === 'true';
+  } catch {
+    return false;
+  }
+}
+
+function setDemoToggle(v: boolean): void {
+  try {
+    localStorage.setItem(DEMO_TOGGLE_KEY, v ? 'true' : 'false');
+  } catch {}
+}
+
 export function SettingsPage({ settings, hydrated, workoutsCount, onUpdateSettings, onExport, onImport }: SettingsPageProps) {
   const fileRef = useRef<HTMLInputElement>(null);
-  const [cacheStats, setCacheStats] = useState({ count: 0, sizeEstimate: '0 MB' });
-  const [clearing, setClearing] = useState(false);
+  const [demosEnabled, setDemosEnabled] = useState(getDemoToggle);
 
-  useEffect(() => {
-    getDemoCacheStats().then(setCacheStats);
-  }, []);
-
-  const handleClearCache = async () => {
-    setClearing(true);
-    await clearDemoCache();
-    setCacheStats({ count: 0, sizeEstimate: '0 MB' });
-    setClearing(false);
+  const handleDemoToggle = (v: boolean) => {
+    setDemosEnabled(v);
+    setDemoToggle(v);
   };
 
   const handleExport = () => {
@@ -83,6 +95,13 @@ export function SettingsPage({ settings, hydrated, workoutsCount, onUpdateSettin
       <Toggle label="Rest Timer" checked={settings.restTimerEnabled} onChange={v => onUpdateSettings({ restTimerEnabled: v })} />
       <Toggle label="Sound" checked={settings.soundEnabled} onChange={v => onUpdateSettings({ soundEnabled: v })} />
       <Toggle label="Require Pelvic Reset" checked={settings.requirePelvicReset} onChange={v => onUpdateSettings({ requirePelvicReset: v })} />
+      
+      <Toggle
+        label="Exercise demos (beta)"
+        checked={demosEnabled}
+        onChange={handleDemoToggle}
+        description={demosEnabled ? '⏳ Coming soon — video demos not yet available' : 'Text tips only (tap exercise name)'}
+      />
 
       <button onClick={handleExport} className="w-full bg-card rounded-xl p-4 flex items-center gap-3 text-foreground font-medium">
         <Download size={20} className="text-primary" />
@@ -94,32 +113,6 @@ export function SettingsPage({ settings, hydrated, workoutsCount, onUpdateSettin
         Import Backup (JSON)
       </button>
       <input ref={fileRef} type="file" accept=".json" className="hidden" onChange={handleImport} />
-
-      {/* Demo Cache */}
-      <div className="bg-card rounded-xl p-4 space-y-3">
-        <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Demo Cache</p>
-        <div className="flex justify-between text-sm">
-          <span className="text-muted-foreground">Cached demos</span>
-          <span className="text-foreground font-mono text-primary">{cacheStats.count}</span>
-        </div>
-        <div className="flex justify-between text-sm">
-          <span className="text-muted-foreground">Storage used</span>
-          <span className="text-foreground font-mono">{cacheStats.sizeEstimate}</span>
-        </div>
-        <p className="text-xs text-muted-foreground">
-          Demos are fetched automatically from wger.de and cached for offline use.
-        </p>
-        {cacheStats.count > 0 && (
-          <button
-            onClick={handleClearCache}
-            disabled={clearing}
-            className="w-full flex items-center justify-center gap-2 bg-destructive/10 text-destructive font-medium py-2.5 rounded-lg text-sm active:bg-destructive/20 disabled:opacity-50"
-          >
-            <Trash2 size={14} />
-            {clearing ? 'Clearing...' : 'Clear demo cache'}
-          </button>
-        )}
-      </div>
 
       {/* Debug Section */}
       <div className="bg-card rounded-xl p-4 space-y-2">
