@@ -32,7 +32,7 @@ function buildInitialSets(exerciseId: string, setsCount: number, lastSession: Re
     if (last && last[i]) {
       return { weight: last[i].weight, reps: last[i].reps, done: false };
     }
-    return { weight: 5, reps: 5, done: false };
+    return { weight: 4, reps: 5, done: false };
   });
 }
 
@@ -196,7 +196,7 @@ export function WorkoutPage({ data, programId, onFinish, onHome, restoredSession
       if (newCount < oldSets.length) {
         ex.sets = oldSets.slice(0, newCount);
       } else {
-        const lastWeight = oldSets.length > 0 ? oldSets[oldSets.length - 1].weight : 5;
+        const lastWeight = oldSets.length > 0 ? oldSets[oldSets.length - 1].weight : 4;
         const lastReps = oldSets.length > 0 ? oldSets[oldSets.length - 1].reps : 5;
         const newSets = Array.from({ length: newCount - oldSets.length }, () => ({
           weight: lastWeight,

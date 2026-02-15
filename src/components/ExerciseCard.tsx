@@ -153,7 +153,7 @@ export function ExerciseCard({
               {set.done ? (
                 <Check size={24} className="text-primary-foreground" strokeWidth={3} />
               ) : (
-                <span className="text-lg font-black text-foreground">{set.reps > 0 ? set.reps : 5}</span>
+                <span className="text-lg font-black text-foreground">{set.reps > 0 ? set.reps : 4}</span>
               )}
             </button>
 
@@ -227,7 +227,10 @@ export function ExerciseCard({
           </p>
           <div className="flex items-center justify-center gap-3">
             <button
-              onClick={() => onSetChange(editingWeightSet, 'weight', Math.max(0, currentSets[editingWeightSet].weight - 2))}
+              onClick={() => {
+                const newVal = Math.max(0, currentSets[editingWeightSet].weight - 2);
+                onSetChange(editingWeightSet, 'weight', Math.round(newVal / 2) * 2);
+              }}
               className="w-10 h-10 rounded-full bg-card text-foreground flex items-center justify-center active:bg-primary/30"
             >
               <Minus size={18} />
@@ -236,7 +239,10 @@ export function ExerciseCard({
               {currentSets[editingWeightSet].weight}<span className="text-sm text-muted-foreground ml-1">kg</span>
             </span>
             <button
-              onClick={() => onSetChange(editingWeightSet, 'weight', Math.min(200, currentSets[editingWeightSet].weight + 2))}
+              onClick={() => {
+                const newVal = Math.min(60, currentSets[editingWeightSet].weight + 2);
+                onSetChange(editingWeightSet, 'weight', Math.round(newVal / 2) * 2);
+              }}
               className="w-10 h-10 rounded-full bg-card text-foreground flex items-center justify-center active:bg-primary/30"
             >
               <Plus size={18} />
