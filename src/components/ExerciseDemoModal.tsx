@@ -1,59 +1,40 @@
-import { useEffect, useRef } from 'react';
-import { X } from 'lucide-react';
-import { DemoEntry } from '@/data/demoRegistry';
+import { useState, useEffect } from 'react';
+import { X, Loader2 } from 'lucide-react';
+import { getExerciseDemo, DemoResult } from '@/lib/demoCache';
 
 interface ExerciseDemoModalProps {
   exerciseName: string;
-  demo: DemoEntry;
   onClose: () => void;
 }
 
-function LottiePlayer({ src }: { src: string }) {
-  const containerRef = useRef<HTMLDivElement>(null);
+// Coaching cues for offline fallback (no ugly placeholders)
+const EXERCISE_CUES: Record<string, string[]> = {
+  default: ['Control the movement', 'Breathe steadily', 'Full range of motion'],
+};
+
+export function ExerciseDemoModal({ exerciseName, onClose }: ExerciseDemoModalProps) {
+  const [demo, setDemo] = useState<DemoResult | undefined>(undefined);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    let destroyed = false;
-    import('lottie-web').then(lottie => {
-      if (destroyed || !containerRef.current) return;
-      const anim = lottie.default.loadAnimation({
-        container: containerRef.current,
-        renderer: 'svg',
-        loop: true,
-        autoplay: true,
-        path: src,
-      });
-      return () => anim.destroy();
+    let cancelled = false;
+    setLoading(true);
+    getExerciseDemo(exerciseName).then(result => {
+      if (!cancelled) {
+        setDemo(result);
+        setLoading(false);
+      }
+    }).catch(() => {
+      if (!cancelled) {
+        setDemo(null);
+        setLoading(false);
+      }
     });
-    return () => { destroyed = true; };
-  }, [src]);
+    return () => { cancelled = true; };
+  }, [exerciseName]);
 
-  return <div ref={containerRef} className="w-full h-full" />;
-}
+  const cues = EXERCISE_CUES[exerciseName.toLowerCase()] || EXERCISE_CUES.default;
 
-function VideoPlayer({ src }: { src: string }) {
-  return (
-    <video
-      src={src}
-      autoPlay
-      loop
-      muted
-      playsInline
-      className="w-full h-full object-contain rounded-lg"
-    />
-  );
-}
-
-function GifPlayer({ src, alt }: { src: string; alt: string }) {
-  return (
-    <img
-      src={src}
-      alt={alt}
-      className="w-full h-full object-contain rounded-lg"
-    />
-  );
-}
-
-export function ExerciseDemoModal({ exerciseName, demo, onClose }: ExerciseDemoModalProps) {
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/85" onClick={onClose}>
       <div
@@ -70,10 +51,33 @@ export function ExerciseDemoModal({ exerciseName, demo, onClose }: ExerciseDemoM
           </button>
         </div>
 
-        <div className="bg-black/40 rounded-xl overflow-hidden aspect-[4/3] flex items-center justify-center">
-          {demo.type === 'lottie' && <LottiePlayer src={demo.src} />}
-          {demo.type === 'video' && <VideoPlayer src={demo.src} />}
-          {demo.type === 'gif' && <GifPlayer src={demo.src} alt={exerciseName} />}
+        <div className="bg-secondary rounded-xl overflow-hidden aspect-[4/3] flex items-center justify-center">
+          {loading ? (
+            <Loader2 size={32} className="text-primary animate-spin" />
+          ) : demo?.type === 'video' ? (
+            <video
+              src={demo.url}
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="w-full h-full object-contain rounded-lg"
+            />
+          ) : demo?.type === 'image' ? (
+            <img
+              src={demo.url}
+              alt={exerciseName}
+              className="w-full h-full object-contain rounded-lg"
+            />
+          ) : (
+            /* Clean fallback: exercise cues, no ugly graphics */
+            <div className="p-4 text-center space-y-2">
+              <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Key Cues</p>
+              {cues.map((cue, i) => (
+                <p key={i} className="text-sm text-foreground/80">{cue}</p>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>

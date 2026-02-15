@@ -1,9 +1,9 @@
 import { AppSettings, AppData, BASE_EXERCISES } from '@/data/exercises';
-import { Download, Upload } from 'lucide-react';
-import { useRef, useMemo } from 'react';
+import { Download, Upload, Trash2 } from 'lucide-react';
+import { useRef, useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { getLastSaved } from '@/lib/storage';
-import { getDemoForExercise, getDemoStats } from '@/data/demoRegistry';
+import { getDemoCacheStats, clearDemoCache } from '@/lib/demoCache';
 
 interface SettingsPageProps {
   settings: AppSettings;
@@ -36,14 +36,19 @@ function Toggle({ label, checked, onChange }: { label: string; checked: boolean;
 
 export function SettingsPage({ settings, hydrated, workoutsCount, onUpdateSettings, onExport, onImport }: SettingsPageProps) {
   const fileRef = useRef<HTMLInputElement>(null);
+  const [cacheStats, setCacheStats] = useState({ count: 0, sizeEstimate: '0 MB' });
+  const [clearing, setClearing] = useState(false);
 
-  const demoStats = useMemo(() => {
-    const uniqueNames = Array.from(new Set(BASE_EXERCISES.map(e => e.name)));
-    const registry = getDemoStats();
-    const withDemo = uniqueNames.filter(n => getDemoForExercise(n) !== null).length;
-    const missing = uniqueNames.filter(n => getDemoForExercise(n) === null);
-    return { total: BASE_EXERCISES.length, unique: uniqueNames.length, withDemo, missing };
+  useEffect(() => {
+    getDemoCacheStats().then(setCacheStats);
   }, []);
+
+  const handleClearCache = async () => {
+    setClearing(true);
+    await clearDemoCache();
+    setCacheStats({ count: 0, sizeEstimate: '0 MB' });
+    setClearing(false);
+  };
 
   const handleExport = () => {
     const json = onExport();
@@ -75,43 +80,49 @@ export function SettingsPage({ settings, hydrated, workoutsCount, onUpdateSettin
     <div className="px-4 pt-12 pb-24 max-w-md mx-auto space-y-4">
       <h1 className="text-2xl font-black text-foreground">Settings</h1>
 
-      <Toggle
-        label="Rest Timer"
-        checked={settings.restTimerEnabled}
-        onChange={v => onUpdateSettings({ restTimerEnabled: v })}
-      />
+      <Toggle label="Rest Timer" checked={settings.restTimerEnabled} onChange={v => onUpdateSettings({ restTimerEnabled: v })} />
+      <Toggle label="Sound" checked={settings.soundEnabled} onChange={v => onUpdateSettings({ soundEnabled: v })} />
+      <Toggle label="Require Pelvic Reset" checked={settings.requirePelvicReset} onChange={v => onUpdateSettings({ requirePelvicReset: v })} />
 
-      <Toggle
-        label="Sound"
-        checked={settings.soundEnabled}
-        onChange={v => onUpdateSettings({ soundEnabled: v })}
-      />
-
-      <Toggle
-        label="Require Pelvic Reset"
-        checked={settings.requirePelvicReset}
-        onChange={v => onUpdateSettings({ requirePelvicReset: v })}
-      />
-
-      <button
-        onClick={handleExport}
-        className="w-full bg-card rounded-xl p-4 flex items-center gap-3 text-foreground font-medium"
-      >
+      <button onClick={handleExport} className="w-full bg-card rounded-xl p-4 flex items-center gap-3 text-foreground font-medium">
         <Download size={20} className="text-primary" />
         Export Backup (JSON)
       </button>
 
-      <button
-        onClick={() => fileRef.current?.click()}
-        className="w-full bg-card rounded-xl p-4 flex items-center gap-3 text-foreground font-medium"
-      >
+      <button onClick={() => fileRef.current?.click()} className="w-full bg-card rounded-xl p-4 flex items-center gap-3 text-foreground font-medium">
         <Upload size={20} className="text-primary" />
         Import Backup (JSON)
       </button>
       <input ref={fileRef} type="file" accept=".json" className="hidden" onChange={handleImport} />
 
+      {/* Demo Cache */}
+      <div className="bg-card rounded-xl p-4 space-y-3">
+        <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Demo Cache</p>
+        <div className="flex justify-between text-sm">
+          <span className="text-muted-foreground">Cached demos</span>
+          <span className="text-foreground font-mono text-primary">{cacheStats.count}</span>
+        </div>
+        <div className="flex justify-between text-sm">
+          <span className="text-muted-foreground">Storage used</span>
+          <span className="text-foreground font-mono">{cacheStats.sizeEstimate}</span>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Demos are fetched automatically from wger.de and cached for offline use.
+        </p>
+        {cacheStats.count > 0 && (
+          <button
+            onClick={handleClearCache}
+            disabled={clearing}
+            className="w-full flex items-center justify-center gap-2 bg-destructive/10 text-destructive font-medium py-2.5 rounded-lg text-sm active:bg-destructive/20 disabled:opacity-50"
+          >
+            <Trash2 size={14} />
+            {clearing ? 'Clearing...' : 'Clear demo cache'}
+          </button>
+        )}
+      </div>
+
       {/* Debug Section */}
-      <div className="bg-card rounded-xl p-4 space-y-2 mt-6">
+      <div className="bg-card rounded-xl p-4 space-y-2">
         <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Debug</p>
         <div className="flex justify-between text-sm">
           <span className="text-muted-foreground">Hydrated</span>
@@ -125,35 +136,6 @@ export function SettingsPage({ settings, hydrated, workoutsCount, onUpdateSettin
           <span className="text-muted-foreground">Last saved</span>
           <span className="text-foreground font-mono text-xs">{getLastSaved() || 'never'}</span>
         </div>
-      </div>
-
-      {/* Demo Status */}
-      <div className="bg-card rounded-xl p-4 space-y-2">
-        <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Demo Status</p>
-        <div className="flex justify-between text-sm">
-          <span className="text-muted-foreground">Total exercises</span>
-          <span className="text-foreground font-mono">{demoStats.total}</span>
-        </div>
-        <div className="flex justify-between text-sm">
-          <span className="text-muted-foreground">Unique exercises</span>
-          <span className="text-foreground font-mono">{demoStats.unique}</span>
-        </div>
-        <div className="flex justify-between text-sm">
-          <span className="text-muted-foreground">Demos available</span>
-          <span className="text-foreground font-mono text-primary">{demoStats.withDemo}</span>
-        </div>
-        <div className="flex justify-between text-sm">
-          <span className="text-muted-foreground">Missing demos</span>
-          <span className="text-foreground font-mono">{demoStats.missing.length}</span>
-        </div>
-        {demoStats.missing.length > 0 && (
-          <div className="pt-1">
-            <p className="text-xs text-muted-foreground mb-1">Missing specific demos:</p>
-            <div className="text-xs text-muted-foreground/70 space-y-0.5">
-              {demoStats.missing.map(n => <p key={n}>• {n}</p>)}
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
