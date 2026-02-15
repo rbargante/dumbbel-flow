@@ -7,12 +7,14 @@ import { ExerciseCard } from '@/components/ExerciseCard';
 import { RestTimerBar } from '@/components/RestTimerBar';
 import { useRestTimer } from '@/hooks/useRestTimer';
 import { saveState } from '@/lib/storage';
-import { Plus, Timer, Dumbbell } from 'lucide-react';
+import { Plus, Timer, Dumbbell, Home } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface WorkoutPageProps {
   data: AppData;
+  programId: string;
   onFinish: (workout: WorkoutLog) => void;
+  onHome?: () => void;
 }
 
 interface ActiveExercise {
@@ -32,14 +34,11 @@ function buildInitialSets(exerciseId: string, setsCount: number, lastSession: Re
   });
 }
 
-export function WorkoutPage({ data, onFinish }: WorkoutPageProps) {
-  // Determine the active program's day order
-  const activeProgram = data.programs.find(p => p.isActive);
-  const programId = activeProgram?.id || 'ppl_dumbbell';
+export function WorkoutPage({ data, programId, onFinish, onHome }: WorkoutPageProps) {
   const dayOrder = PROGRAM_DAY_ORDERS[programId] || DAY_ORDER;
   const day = dayOrder[data.nextDayIndex % dayOrder.length];
 
-  const baseExercises = BASE_EXERCISES.filter(e => e.day === day);
+  const baseExercises = BASE_EXERCISES.filter(e => e.day === day && e.programId === programId);
   const timer = useRestTimer(data.settings.soundEnabled);
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const startTimeRef = useRef(Date.now());
@@ -56,7 +55,8 @@ export function WorkoutPage({ data, onFinish }: WorkoutPageProps) {
   );
 
   const [showExtras, setShowExtras] = useState(false);
-  const extras = EXTRA_EXERCISES[day] || [];
+  const extrasKey = `${programId}_${day}`;
+  const extras = EXTRA_EXERCISES[extrasKey] || [];
 
   // Duration timer
   useEffect(() => {
@@ -72,7 +72,6 @@ export function WorkoutPage({ data, onFinish }: WorkoutPageProps) {
     return `${m}:${sec.toString().padStart(2, '0')}`;
   };
 
-  // Total kg lifted (only completed, non-warmup sets)
   const totalKg = useMemo(() => {
     return exercises.reduce((sum, ex) => {
       return sum + ex.sets.reduce((setSum, set) => {
@@ -84,7 +83,6 @@ export function WorkoutPage({ data, onFinish }: WorkoutPageProps) {
     }, 0);
   }, [exercises, skipWarmup]);
 
-  // PR detection: check if any exercise has a higher max weight than last session
   const prExercises = useMemo(() => {
     const prSet = new Set<string>();
     exercises.forEach(ex => {
@@ -98,7 +96,6 @@ export function WorkoutPage({ data, onFinish }: WorkoutPageProps) {
     return prSet;
   }, [exercises, data.lastSessionByExercise]);
 
-  // Real-time save
   const scheduleRealTimeSave = () => {
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
     saveTimeoutRef.current = setTimeout(() => {
@@ -195,6 +192,7 @@ export function WorkoutPage({ data, onFinish }: WorkoutPageProps) {
         repRange: extra.repRange,
         isCompound: extra.isCompound,
         day,
+        programId,
       },
       isBase: false,
       originalId: extra.id,
@@ -228,6 +226,8 @@ export function WorkoutPage({ data, onFinish }: WorkoutPageProps) {
     onFinish(workout);
   };
 
+  const totalExercises = exercises.length;
+
   return (
     <div className={cn('px-4 pb-24 max-w-md mx-auto space-y-4', timer.isRunning ? 'pt-16' : 'pt-6')}>
       <RestTimerBar
@@ -239,7 +239,13 @@ export function WorkoutPage({ data, onFinish }: WorkoutPageProps) {
       />
 
       <div className="flex items-center justify-between">
+        {onHome && (
+          <button onClick={onHome} className="p-2 -ml-2 rounded-lg active:bg-secondary transition-colors">
+            <Home size={20} className="text-muted-foreground" />
+          </button>
+        )}
         <h1 className="text-2xl font-black text-foreground">{DAY_NAMES[day]}</h1>
+        <div />
       </div>
 
       {/* Stats bar */}
@@ -264,58 +270,65 @@ export function WorkoutPage({ data, onFinish }: WorkoutPageProps) {
       </div>
 
       {exercises.map((ex, i) => (
-        <ExerciseCard
-          key={ex.exercise.id}
-          name={ex.exercise.name}
-          exerciseId={ex.originalId}
-          setsCount={ex.exercise.sets}
-          repRange={ex.exercise.repRange}
-          lastSession={data.lastSessionByExercise[ex.originalId]}
-          currentSets={ex.sets}
-          onSetChange={(si, f, v) => handleSetChange(i, si, f, v)}
-          onSetDone={(si) => handleSetDone(i, si)}
-          onSetsCountChange={(count) => handleSetsCountChange(i, count)}
-          isBase={ex.isBase}
-          onRemove={ex.isBase ? undefined : () => removeExercise(i)}
-          onSwap={(altId, altName, altSets, altRepRange, altIsCompound) =>
-            handleSwap(i, altId, altName, altSets, altRepRange, altIsCompound)
-          }
-          isPR={prExercises.has(ex.exercise.id)}
-          mediaUrl={ex.exercise.mediaUrl}
-        />
+        <div key={ex.exercise.id}>
+          {/* Progress indicator */}
+          <p className="text-[10px] text-muted-foreground mb-1 font-medium">
+            Exercise {i + 1} of {totalExercises}
+          </p>
+          <ExerciseCard
+            name={ex.exercise.name}
+            exerciseId={ex.originalId}
+            setsCount={ex.exercise.sets}
+            repRange={ex.exercise.repRange}
+            lastSession={data.lastSessionByExercise[ex.originalId]}
+            currentSets={ex.sets}
+            onSetChange={(si, f, v) => handleSetChange(i, si, f, v)}
+            onSetDone={(si) => handleSetDone(i, si)}
+            onSetsCountChange={(count) => handleSetsCountChange(i, count)}
+            isBase={ex.isBase}
+            onRemove={ex.isBase ? undefined : () => removeExercise(i)}
+            onSwap={(altId, altName, altSets, altRepRange, altIsCompound) =>
+              handleSwap(i, altId, altName, altSets, altRepRange, altIsCompound)
+            }
+            isPR={prExercises.has(ex.exercise.id)}
+            mediaUrl={ex.exercise.mediaUrl}
+          />
+        </div>
       ))}
 
       {/* Extras section */}
-      <div className="space-y-2">
-        <h2 className="text-lg font-bold text-foreground mt-4">Extras</h2>
-        {!showExtras ? (
-          <button
-            onClick={() => setShowExtras(true)}
-            className="w-full bg-card rounded-xl p-4 flex items-center justify-center gap-2 text-muted-foreground"
-          >
-            <Plus size={20} />
-            <span className="font-semibold">Add exercise</span>
-          </button>
-        ) : (
-          <div className="bg-card rounded-xl p-4 space-y-2">
-            {extras.map(ex => (
-              <button
-                key={ex.id}
-                onClick={() => addExtra(ex)}
-                className="w-full text-left p-3 rounded-lg bg-secondary text-foreground text-sm font-medium"
-              >
-                {ex.name} — {ex.defaultSets}×{ex.repRange}
-              </button>
-            ))}
+      {extras.length > 0 && (
+        <div className="space-y-2">
+          <h2 className="text-lg font-bold text-foreground mt-4">Extras</h2>
+          {!showExtras ? (
             <button
-              onClick={() => setShowExtras(false)}
-              className="w-full text-center text-sm text-muted-foreground py-2"
+              onClick={() => setShowExtras(true)}
+              className="w-full bg-card rounded-xl p-4 flex items-center justify-center gap-2 text-muted-foreground"
             >
-              Cancel
+              <Plus size={20} />
+              <span className="font-semibold">Add exercise</span>
             </button>
-          </div>
-        )}
-      </div>
+          ) : (
+            <div className="bg-card rounded-xl p-4 space-y-2">
+              {extras.map(ex => (
+                <button
+                  key={ex.id}
+                  onClick={() => addExtra(ex)}
+                  className="w-full text-left p-3 rounded-lg bg-secondary text-foreground text-sm font-medium"
+                >
+                  {ex.name} — {ex.defaultSets}×{ex.repRange}
+                </button>
+              ))}
+              <button
+                onClick={() => setShowExtras(false)}
+                className="w-full text-center text-sm text-muted-foreground py-2"
+              >
+                Cancel
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Finish button */}
       <div className="fixed bottom-4 left-4 right-4 max-w-md mx-auto">

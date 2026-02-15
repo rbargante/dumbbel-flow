@@ -1,18 +1,27 @@
-export type WorkoutDay = 'push' | 'pull' | 'legs' | 'full_body';
+export type WorkoutDay = 'push' | 'pull' | 'legs' | 'full_body' | 'pelvic_reset' | 'posture' | 'balance';
 
 export const DAY_NAMES: Record<WorkoutDay, string> = {
   push: 'Push Day',
   pull: 'Pull Day',
   legs: 'Legs Day',
   full_body: 'Full Body',
+  pelvic_reset: 'Pelvic Reset',
+  posture: 'Posture',
+  balance: 'Balance & Longevity',
 };
 
 export const DAY_ORDER: WorkoutDay[] = ['push', 'pull', 'legs'];
 
-// Program-specific day orders
 export const PROGRAM_DAY_ORDERS: Record<string, WorkoutDay[]> = {
   ppl_dumbbell: ['push', 'pull', 'legs'],
   full_body_dumbbell: ['full_body'],
+  ppl_ezbar: ['push', 'pull', 'legs'],
+  full_body_ezbar: ['full_body'],
+  ppl_ironmaster: ['push', 'pull', 'legs'],
+  full_body_ironmaster: ['full_body'],
+  pelvic_reset: ['pelvic_reset'],
+  posture_routine: ['posture'],
+  balance_longevity: ['balance'],
 };
 
 export interface Exercise {
@@ -22,6 +31,7 @@ export interface Exercise {
   repRange: string;
   isCompound: boolean;
   day: WorkoutDay;
+  programId: string;
   mediaUrl?: string;
 }
 
@@ -95,10 +105,9 @@ export const DEFAULT_PROGRAMS: Program[] = [
     name: 'EZ Bar PPL',
     type: 'ppl',
     isActive: false,
-    equipment: ['EZ Bar', 'Bench'],
+    equipment: ['EZ Bar', 'Dumbbells'],
     workoutDays: ['Push', 'Pull', 'Legs'],
     rotationIndex: 0,
-    comingSoon: true,
     category: 'main',
   },
   {
@@ -106,10 +115,9 @@ export const DEFAULT_PROGRAMS: Program[] = [
     name: 'EZ Bar Full Body',
     type: 'full_body',
     isActive: false,
-    equipment: ['EZ Bar', 'Bench'],
+    equipment: ['EZ Bar', 'Dumbbells'],
     workoutDays: ['Full Body'],
     rotationIndex: 0,
-    comingSoon: true,
     category: 'main',
   },
   {
@@ -117,10 +125,9 @@ export const DEFAULT_PROGRAMS: Program[] = [
     name: 'Ironmaster PPL',
     type: 'ppl',
     isActive: false,
-    equipment: ['Ironmaster', 'Bench'],
+    equipment: ['Full Home Gym'],
     workoutDays: ['Push', 'Pull', 'Legs'],
     rotationIndex: 0,
-    comingSoon: true,
     category: 'main',
   },
   {
@@ -128,10 +135,9 @@ export const DEFAULT_PROGRAMS: Program[] = [
     name: 'Ironmaster Full Body',
     type: 'full_body',
     isActive: false,
-    equipment: ['Ironmaster', 'Bench'],
+    equipment: ['Full Home Gym'],
     workoutDays: ['Full Body'],
     rotationIndex: 0,
-    comingSoon: true,
     category: 'main',
   },
   // ─── Complementary ───
@@ -153,7 +159,6 @@ export const DEFAULT_PROGRAMS: Program[] = [
     equipment: ['Bodyweight'],
     workoutDays: ['Posture'],
     rotationIndex: 0,
-    comingSoon: true,
     category: 'complementary',
   },
   {
@@ -161,10 +166,9 @@ export const DEFAULT_PROGRAMS: Program[] = [
     name: 'Balance & Longevity',
     type: 'full_body',
     isActive: false,
-    equipment: ['Bodyweight'],
+    equipment: ['Dumbbells'],
     workoutDays: ['Balance'],
     rotationIndex: 0,
-    comingSoon: true,
     category: 'complementary',
   },
 ];
@@ -178,148 +182,234 @@ export interface AppData {
 }
 
 export const PELVIC_RESET_EXERCISES = [
-  { id: 'pr1', name: '90/90 Breathing', detail: '5 ciclos' },
-  { id: 'pr2', name: 'Glute Bridge (posterior tilt)', detail: '2×12 com pausa 2s' },
-  { id: 'pr3', name: 'Dead Bug', detail: '2×8 por lado' },
-  { id: 'pr4', name: 'Split Squat leve', detail: '2×8 por lado' },
+  { id: 'pr1', name: 'Posterior Pelvic Tilt Hold', detail: '3×30s hold' },
+  { id: 'pr2', name: 'Dead Bug', detail: '3×8 each side' },
+  { id: 'pr3', name: 'Glute Bridge Hold', detail: '3×30s hold' },
 ];
+
+// ═══════════════════════════════════════════
+//  BASE EXERCISES — All Programs
+// ═══════════════════════════════════════════
 
 export const BASE_EXERCISES: Exercise[] = [
+  // ─── DUMBBELL PPL ───
   // Push
-  { id: 'push1', name: 'Flat Dumbbell Bench Press', sets: 4, repRange: '6–8', isCompound: true, day: 'push' },
-  { id: 'push2', name: 'Incline Dumbbell Press', sets: 3, repRange: '8–10', isCompound: true, day: 'push' },
-  { id: 'push3', name: 'Dumbbell Shoulder Press', sets: 3, repRange: '6–8', isCompound: true, day: 'push' },
-  { id: 'push4', name: 'Lateral Raise', sets: 3, repRange: '12–15', isCompound: false, day: 'push' },
-  { id: 'push5', name: 'Overhead Triceps Extension', sets: 3, repRange: '10–12', isCompound: false, day: 'push' },
-
+  { id: 'push1', name: 'Flat Dumbbell Bench Press', sets: 4, repRange: '6–8', isCompound: true, day: 'push', programId: 'ppl_dumbbell' },
+  { id: 'push2', name: 'Incline Dumbbell Bench Press', sets: 4, repRange: '8–10', isCompound: true, day: 'push', programId: 'ppl_dumbbell' },
+  { id: 'push3', name: 'Seated Dumbbell Shoulder Press', sets: 4, repRange: '8–10', isCompound: true, day: 'push', programId: 'ppl_dumbbell' },
+  { id: 'push4', name: 'Dumbbell Lateral Raise', sets: 4, repRange: '12–15', isCompound: false, day: 'push', programId: 'ppl_dumbbell' },
+  { id: 'push5', name: 'Dumbbell Overhead Triceps Extension', sets: 4, repRange: '10–12', isCompound: false, day: 'push', programId: 'ppl_dumbbell' },
   // Pull
-  { id: 'pull1', name: 'One Arm Dumbbell Row', sets: 4, repRange: '6–8', isCompound: true, day: 'pull' },
-  { id: 'pull2', name: 'Dumbbell Romanian Deadlift', sets: 4, repRange: '6–8', isCompound: true, day: 'pull' },
-  { id: 'pull3', name: 'Dumbbell Pullover', sets: 3, repRange: '8–10', isCompound: true, day: 'pull' },
-  { id: 'pull4', name: 'Rear Delt Fly', sets: 3, repRange: '12–15', isCompound: false, day: 'pull' },
-  { id: 'pull5', name: 'Dumbbell Curl', sets: 3, repRange: '8–10', isCompound: false, day: 'pull' },
-  { id: 'pull6', name: 'Hammer Curl', sets: 3, repRange: '10–12', isCompound: false, day: 'pull' },
-
+  { id: 'pull1', name: 'One-Arm Dumbbell Row', sets: 4, repRange: '6–8', isCompound: true, day: 'pull', programId: 'ppl_dumbbell' },
+  { id: 'pull2', name: 'Chest-Supported Dumbbell Row', sets: 4, repRange: '8–10', isCompound: true, day: 'pull', programId: 'ppl_dumbbell' },
+  { id: 'pull3', name: 'Dumbbell Rear Delt Raise', sets: 4, repRange: '12–15', isCompound: false, day: 'pull', programId: 'ppl_dumbbell' },
+  { id: 'pull4', name: 'Dumbbell Hammer Curl', sets: 4, repRange: '10–12', isCompound: false, day: 'pull', programId: 'ppl_dumbbell' },
+  { id: 'pull5', name: 'Dumbbell Curl', sets: 4, repRange: '10–12', isCompound: false, day: 'pull', programId: 'ppl_dumbbell' },
   // Legs
-  { id: 'legs1', name: 'Goblet Squat', sets: 4, repRange: '8–10', isCompound: true, day: 'legs' },
-  { id: 'legs2', name: 'Bulgarian Split Squat', sets: 3, repRange: '8 cada perna', isCompound: true, day: 'legs' },
-  { id: 'legs3', name: 'Dumbbell RDL', sets: 3, repRange: '8–10', isCompound: true, day: 'legs' },
-  { id: 'legs4', name: 'Walking Lunges', sets: 3, repRange: '10 cada perna', isCompound: true, day: 'legs' },
-  { id: 'legs5', name: 'Standing Calf Raise', sets: 4, repRange: '12–15', isCompound: false, day: 'legs' },
+  { id: 'legs1', name: 'Goblet Squat', sets: 4, repRange: '8–10', isCompound: true, day: 'legs', programId: 'ppl_dumbbell' },
+  { id: 'legs2', name: 'Bulgarian Split Squat', sets: 4, repRange: '8 each', isCompound: true, day: 'legs', programId: 'ppl_dumbbell' },
+  { id: 'legs3', name: 'Dumbbell Romanian Deadlift', sets: 4, repRange: '8–10', isCompound: true, day: 'legs', programId: 'ppl_dumbbell' },
+  { id: 'legs4', name: 'Dumbbell Hip Thrust', sets: 4, repRange: '10–12', isCompound: true, day: 'legs', programId: 'ppl_dumbbell' },
+  { id: 'legs5', name: 'Standing Dumbbell Calf Raise', sets: 4, repRange: '12–15', isCompound: false, day: 'legs', programId: 'ppl_dumbbell' },
 
-  // Full Body
-  { id: 'fb1', name: 'Flat Dumbbell Bench Press', sets: 4, repRange: '6–8', isCompound: true, day: 'full_body' },
-  { id: 'fb2', name: 'One-Arm Dumbbell Row', sets: 4, repRange: '6–8', isCompound: true, day: 'full_body' },
-  { id: 'fb3', name: 'Goblet Squat', sets: 4, repRange: '8–10', isCompound: true, day: 'full_body' },
-  { id: 'fb4', name: 'Romanian Deadlift', sets: 4, repRange: '6–8', isCompound: true, day: 'full_body' },
-  { id: 'fb5', name: 'Seated Dumbbell Shoulder Press', sets: 4, repRange: '6–8', isCompound: true, day: 'full_body' },
-  { id: 'fb6', name: 'Dumbbell Lateral Raise', sets: 4, repRange: '12–15', isCompound: false, day: 'full_body' },
-  { id: 'fb7', name: 'Alternating Dumbbell Curl', sets: 4, repRange: '8–10', isCompound: false, day: 'full_body' },
-  { id: 'fb8', name: 'Overhead Dumbbell Triceps Extension', sets: 4, repRange: '10–12', isCompound: false, day: 'full_body' },
-  { id: 'fb9', name: 'Standing Calf Raise', sets: 4, repRange: '12–15', isCompound: false, day: 'full_body' },
+  // ─── DUMBBELL FULL BODY ───
+  { id: 'fb1', name: 'Flat Dumbbell Bench Press', sets: 4, repRange: '6–8', isCompound: true, day: 'full_body', programId: 'full_body_dumbbell' },
+  { id: 'fb2', name: 'One-Arm Dumbbell Row', sets: 4, repRange: '6–8', isCompound: true, day: 'full_body', programId: 'full_body_dumbbell' },
+  { id: 'fb3', name: 'Goblet Squat', sets: 4, repRange: '8–10', isCompound: true, day: 'full_body', programId: 'full_body_dumbbell' },
+  { id: 'fb4', name: 'Dumbbell Romanian Deadlift', sets: 4, repRange: '8–10', isCompound: true, day: 'full_body', programId: 'full_body_dumbbell' },
+  { id: 'fb5', name: 'Seated Dumbbell Shoulder Press', sets: 4, repRange: '8–10', isCompound: true, day: 'full_body', programId: 'full_body_dumbbell' },
+  { id: 'fb6', name: 'Dumbbell Lateral Raise', sets: 4, repRange: '12–15', isCompound: false, day: 'full_body', programId: 'full_body_dumbbell' },
+  { id: 'fb7', name: 'Dumbbell Curl', sets: 4, repRange: '10–12', isCompound: false, day: 'full_body', programId: 'full_body_dumbbell' },
+  { id: 'fb8', name: 'Dumbbell Overhead Triceps Extension', sets: 4, repRange: '10–12', isCompound: false, day: 'full_body', programId: 'full_body_dumbbell' },
+  { id: 'fb9', name: 'Standing Dumbbell Calf Raise', sets: 4, repRange: '12–15', isCompound: false, day: 'full_body', programId: 'full_body_dumbbell' },
+
+  // ─── EZ BAR PPL ───
+  // Push
+  { id: 'ez_push1', name: 'EZ Bar Floor Press', sets: 4, repRange: '6–8', isCompound: true, day: 'push', programId: 'ppl_ezbar' },
+  { id: 'ez_push2', name: 'Close-Grip EZ Bar Press', sets: 4, repRange: '8–10', isCompound: true, day: 'push', programId: 'ppl_ezbar' },
+  { id: 'ez_push3', name: 'EZ Bar Skullcrusher', sets: 4, repRange: '10–12', isCompound: false, day: 'push', programId: 'ppl_ezbar' },
+  { id: 'ez_push4', name: 'Dumbbell Lateral Raise', sets: 4, repRange: '12–15', isCompound: false, day: 'push', programId: 'ppl_ezbar' },
+  // Pull
+  { id: 'ez_pull1', name: 'EZ Bar Bent-Over Row', sets: 4, repRange: '6–8', isCompound: true, day: 'pull', programId: 'ppl_ezbar' },
+  { id: 'ez_pull2', name: 'EZ Bar Curl', sets: 4, repRange: '10–12', isCompound: false, day: 'pull', programId: 'ppl_ezbar' },
+  { id: 'ez_pull3', name: 'Reverse EZ Bar Curl', sets: 4, repRange: '10–12', isCompound: false, day: 'pull', programId: 'ppl_ezbar' },
+  { id: 'ez_pull4', name: 'Dumbbell Rear Delt Raise', sets: 4, repRange: '12–15', isCompound: false, day: 'pull', programId: 'ppl_ezbar' },
+  // Legs
+  { id: 'ez_legs1', name: 'EZ Bar Romanian Deadlift', sets: 4, repRange: '8–10', isCompound: true, day: 'legs', programId: 'ppl_ezbar' },
+  { id: 'ez_legs2', name: 'Goblet Squat', sets: 4, repRange: '8–10', isCompound: true, day: 'legs', programId: 'ppl_ezbar' },
+  { id: 'ez_legs3', name: 'Bulgarian Split Squat', sets: 4, repRange: '8 each', isCompound: true, day: 'legs', programId: 'ppl_ezbar' },
+  { id: 'ez_legs4', name: 'Standing Calf Raise', sets: 4, repRange: '12–15', isCompound: false, day: 'legs', programId: 'ppl_ezbar' },
+
+  // ─── EZ BAR FULL BODY ───
+  { id: 'ez_fb1', name: 'EZ Bar Floor Press', sets: 4, repRange: '6–8', isCompound: true, day: 'full_body', programId: 'full_body_ezbar' },
+  { id: 'ez_fb2', name: 'EZ Bar Bent-Over Row', sets: 4, repRange: '6–8', isCompound: true, day: 'full_body', programId: 'full_body_ezbar' },
+  { id: 'ez_fb3', name: 'EZ Bar Romanian Deadlift', sets: 4, repRange: '8–10', isCompound: true, day: 'full_body', programId: 'full_body_ezbar' },
+  { id: 'ez_fb4', name: 'Goblet Squat', sets: 4, repRange: '8–10', isCompound: true, day: 'full_body', programId: 'full_body_ezbar' },
+  { id: 'ez_fb5', name: 'EZ Bar Curl', sets: 4, repRange: '10–12', isCompound: false, day: 'full_body', programId: 'full_body_ezbar' },
+  { id: 'ez_fb6', name: 'EZ Bar Skullcrusher', sets: 4, repRange: '10–12', isCompound: false, day: 'full_body', programId: 'full_body_ezbar' },
+  { id: 'ez_fb7', name: 'Standing Calf Raise', sets: 4, repRange: '12–15', isCompound: false, day: 'full_body', programId: 'full_body_ezbar' },
+
+  // ─── IRONMASTER PPL ───
+  // Push
+  { id: 'im_push1', name: 'Flat Dumbbell Bench Press', sets: 4, repRange: '6–8', isCompound: true, day: 'push', programId: 'ppl_ironmaster' },
+  { id: 'im_push2', name: 'Incline Dumbbell Bench Press', sets: 4, repRange: '8–10', isCompound: true, day: 'push', programId: 'ppl_ironmaster' },
+  { id: 'im_push3', name: 'Seated Dumbbell Shoulder Press', sets: 4, repRange: '8–10', isCompound: true, day: 'push', programId: 'ppl_ironmaster' },
+  { id: 'im_push4', name: 'Cable Triceps Pushdown', sets: 4, repRange: '10–12', isCompound: false, day: 'push', programId: 'ppl_ironmaster' },
+  { id: 'im_push5', name: 'Dumbbell Lateral Raise', sets: 4, repRange: '12–15', isCompound: false, day: 'push', programId: 'ppl_ironmaster' },
+  // Pull
+  { id: 'im_pull1', name: 'Chin-Ups / Pull-Ups', sets: 4, repRange: 'Max', isCompound: true, day: 'pull', programId: 'ppl_ironmaster' },
+  { id: 'im_pull2', name: 'One-Arm Cable Row', sets: 4, repRange: '10–12', isCompound: true, day: 'pull', programId: 'ppl_ironmaster' },
+  { id: 'im_pull3', name: 'Chest-Supported Dumbbell Row', sets: 4, repRange: '8–10', isCompound: true, day: 'pull', programId: 'ppl_ironmaster' },
+  { id: 'im_pull4', name: 'Cable Face Pull', sets: 4, repRange: '12–15', isCompound: false, day: 'pull', programId: 'ppl_ironmaster' },
+  { id: 'im_pull5', name: 'Dumbbell / EZ Bar Curl', sets: 4, repRange: '10–12', isCompound: false, day: 'pull', programId: 'ppl_ironmaster' },
+  // Legs
+  { id: 'im_legs1', name: 'Goblet Squat', sets: 4, repRange: '8–10', isCompound: true, day: 'legs', programId: 'ppl_ironmaster' },
+  { id: 'im_legs2', name: 'Bulgarian Split Squat', sets: 4, repRange: '8 each', isCompound: true, day: 'legs', programId: 'ppl_ironmaster' },
+  { id: 'im_legs3', name: 'Leg Extension', sets: 4, repRange: '10–12', isCompound: false, day: 'legs', programId: 'ppl_ironmaster' },
+  { id: 'im_legs4', name: 'Leg Curl', sets: 4, repRange: '10–12', isCompound: false, day: 'legs', programId: 'ppl_ironmaster' },
+  { id: 'im_legs5', name: 'Dumbbell Romanian Deadlift', sets: 4, repRange: '8–10', isCompound: true, day: 'legs', programId: 'ppl_ironmaster' },
+  { id: 'im_legs6', name: 'Standing Calf Raise', sets: 4, repRange: '12–15', isCompound: false, day: 'legs', programId: 'ppl_ironmaster' },
+
+  // ─── IRONMASTER FULL BODY ───
+  { id: 'im_fb1', name: 'Flat Dumbbell Bench Press', sets: 4, repRange: '6–8', isCompound: true, day: 'full_body', programId: 'full_body_ironmaster' },
+  { id: 'im_fb2', name: 'Chin-Ups / Pull-Ups', sets: 4, repRange: 'Max', isCompound: true, day: 'full_body', programId: 'full_body_ironmaster' },
+  { id: 'im_fb3', name: 'Cable Row', sets: 4, repRange: '10–12', isCompound: true, day: 'full_body', programId: 'full_body_ironmaster' },
+  { id: 'im_fb4', name: 'Goblet Squat', sets: 4, repRange: '8–10', isCompound: true, day: 'full_body', programId: 'full_body_ironmaster' },
+  { id: 'im_fb5', name: 'Leg Extension', sets: 4, repRange: '10–12', isCompound: false, day: 'full_body', programId: 'full_body_ironmaster' },
+  { id: 'im_fb6', name: 'Dumbbell Romanian Deadlift', sets: 4, repRange: '8–10', isCompound: true, day: 'full_body', programId: 'full_body_ironmaster' },
+  { id: 'im_fb7', name: 'Dumbbell Lateral Raise', sets: 4, repRange: '12–15', isCompound: false, day: 'full_body', programId: 'full_body_ironmaster' },
+  { id: 'im_fb8', name: 'Dumbbell / EZ Bar Curl', sets: 4, repRange: '10–12', isCompound: false, day: 'full_body', programId: 'full_body_ironmaster' },
+  { id: 'im_fb9', name: 'Cable Triceps Pushdown', sets: 4, repRange: '10–12', isCompound: false, day: 'full_body', programId: 'full_body_ironmaster' },
+  { id: 'im_fb10', name: 'Standing Calf Raise', sets: 4, repRange: '12–15', isCompound: false, day: 'full_body', programId: 'full_body_ironmaster' },
+
+  // ─── COMPLEMENTARY: PELVIC RESET ───
+  { id: 'c_pr1', name: 'Posterior Pelvic Tilt Hold', sets: 3, repRange: '30s hold', isCompound: false, day: 'pelvic_reset', programId: 'pelvic_reset' },
+  { id: 'c_pr2', name: 'Dead Bug', sets: 3, repRange: '8 each side', isCompound: false, day: 'pelvic_reset', programId: 'pelvic_reset' },
+  { id: 'c_pr3', name: 'Glute Bridge Hold', sets: 3, repRange: '30s hold', isCompound: false, day: 'pelvic_reset', programId: 'pelvic_reset' },
+
+  // ─── COMPLEMENTARY: POSTURE ───
+  { id: 'c_pos1', name: 'Wall Slides', sets: 3, repRange: '10–12', isCompound: false, day: 'posture', programId: 'posture_routine' },
+  { id: 'c_pos2', name: 'Rear Delt Raise', sets: 3, repRange: '12–15', isCompound: false, day: 'posture', programId: 'posture_routine' },
+  { id: 'c_pos3', name: 'Chin Tucks', sets: 3, repRange: '15–20', isCompound: false, day: 'posture', programId: 'posture_routine' },
+
+  // ─── COMPLEMENTARY: BALANCE & LONGEVITY ───
+  { id: 'c_bal1', name: 'Single-Leg Stand', sets: 3, repRange: '30s each', isCompound: false, day: 'balance', programId: 'balance_longevity' },
+  { id: 'c_bal2', name: 'Step-Back Lunge', sets: 3, repRange: '10 each', isCompound: true, day: 'balance', programId: 'balance_longevity' },
+  { id: 'c_bal3', name: 'Slow Calf Raises', sets: 3, repRange: '15–20', isCompound: false, day: 'balance', programId: 'balance_longevity' },
+  { id: 'c_bal4', name: 'Farmer Carry', sets: 3, repRange: '30s', isCompound: true, day: 'balance', programId: 'balance_longevity' },
 ];
 
-export const EXTRA_EXERCISES: Record<WorkoutDay, { id: string; name: string; defaultSets: number; repRange: string; isCompound: boolean }[]> = {
-  push: [
-    { id: 'extra_push1', name: 'Chest Fly', defaultSets: 3, repRange: '10–12', isCompound: false },
-    { id: 'extra_push2', name: 'Front Raise', defaultSets: 3, repRange: '12–15', isCompound: false },
+// ═══════════════════════════════════════════
+//  EXTRA EXERCISES — Add during workout
+// ═══════════════════════════════════════════
+
+export const EXTRA_EXERCISES: Record<string, { id: string; name: string; defaultSets: number; repRange: string; isCompound: boolean }[]> = {
+  // Dumbbell PPL
+  ppl_dumbbell_push: [
+    { id: 'extra_push1', name: 'Dumbbell Chest Fly', defaultSets: 3, repRange: '10–12', isCompound: false },
+    { id: 'extra_push2', name: 'Dumbbell Front Raise', defaultSets: 3, repRange: '12–15', isCompound: false },
     { id: 'extra_push3', name: 'Triceps Kickback', defaultSets: 3, repRange: '10–12', isCompound: false },
-    { id: 'extra_push4', name: 'Close Grip Press', defaultSets: 3, repRange: '8–10', isCompound: true },
   ],
-  pull: [
-    { id: 'extra_pull1', name: 'Shrug', defaultSets: 3, repRange: '12–15', isCompound: false },
+  ppl_dumbbell_pull: [
+    { id: 'extra_pull1', name: 'Dumbbell Shrug', defaultSets: 3, repRange: '12–15', isCompound: false },
     { id: 'extra_pull2', name: 'Concentration Curl', defaultSets: 3, repRange: '10–12', isCompound: false },
-    { id: 'extra_pull3', name: 'Reverse Fly', defaultSets: 3, repRange: '12–15', isCompound: false },
-    { id: 'extra_pull4', name: 'Face Pull (band)', defaultSets: 3, repRange: '15–20', isCompound: false },
+    { id: 'extra_pull3', name: 'Dumbbell Pullover', defaultSets: 3, repRange: '10–12', isCompound: true },
   ],
-  legs: [
+  ppl_dumbbell_legs: [
     { id: 'extra_legs1', name: 'Sumo Squat', defaultSets: 3, repRange: '10–12', isCompound: true },
-    { id: 'extra_legs2', name: 'Step Up', defaultSets: 3, repRange: '10 cada perna', isCompound: true },
+    { id: 'extra_legs2', name: 'Step Up', defaultSets: 3, repRange: '10 each', isCompound: true },
     { id: 'extra_legs3', name: 'Seated Calf Raise', defaultSets: 3, repRange: '15–20', isCompound: false },
-    { id: 'extra_legs4', name: 'Hip Thrust', defaultSets: 3, repRange: '10–12', isCompound: true },
   ],
-  full_body: [
-    { id: 'extra_fb1', name: 'Chest Fly', defaultSets: 3, repRange: '10–12', isCompound: false },
-    { id: 'extra_fb2', name: 'Rear Delt Fly', defaultSets: 3, repRange: '12–15', isCompound: false },
+  // Dumbbell Full Body
+  full_body_dumbbell_full_body: [
+    { id: 'extra_fb1', name: 'Dumbbell Chest Fly', defaultSets: 3, repRange: '10–12', isCompound: false },
+    { id: 'extra_fb2', name: 'Rear Delt Raise', defaultSets: 3, repRange: '12–15', isCompound: false },
     { id: 'extra_fb3', name: 'Hammer Curl', defaultSets: 3, repRange: '10–12', isCompound: false },
-    { id: 'extra_fb4', name: 'Walking Lunges', defaultSets: 3, repRange: '10 cada perna', isCompound: true },
+    { id: 'extra_fb4', name: 'Walking Lunges', defaultSets: 3, repRange: '10 each', isCompound: true },
+  ],
+  // EZ Bar PPL
+  ppl_ezbar_push: [
+    { id: 'extra_ez_push1', name: 'Dumbbell Front Raise', defaultSets: 3, repRange: '12–15', isCompound: false },
+    { id: 'extra_ez_push2', name: 'Diamond Push-Up', defaultSets: 3, repRange: '10–15', isCompound: false },
+  ],
+  ppl_ezbar_pull: [
+    { id: 'extra_ez_pull1', name: 'Dumbbell Hammer Curl', defaultSets: 3, repRange: '10–12', isCompound: false },
+    { id: 'extra_ez_pull2', name: 'Dumbbell Shrug', defaultSets: 3, repRange: '12–15', isCompound: false },
+  ],
+  ppl_ezbar_legs: [
+    { id: 'extra_ez_legs1', name: 'Dumbbell Hip Thrust', defaultSets: 3, repRange: '10–12', isCompound: true },
+    { id: 'extra_ez_legs2', name: 'Step Up', defaultSets: 3, repRange: '10 each', isCompound: true },
+  ],
+  // EZ Bar Full Body
+  full_body_ezbar_full_body: [
+    { id: 'extra_ez_fb1', name: 'Dumbbell Lateral Raise', defaultSets: 3, repRange: '12–15', isCompound: false },
+    { id: 'extra_ez_fb2', name: 'Dumbbell Rear Delt Raise', defaultSets: 3, repRange: '12–15', isCompound: false },
+  ],
+  // Ironmaster PPL
+  ppl_ironmaster_push: [
+    { id: 'extra_im_push1', name: 'Dumbbell Chest Fly', defaultSets: 3, repRange: '10–12', isCompound: false },
+    { id: 'extra_im_push2', name: 'Cable Lateral Raise', defaultSets: 3, repRange: '12–15', isCompound: false },
+  ],
+  ppl_ironmaster_pull: [
+    { id: 'extra_im_pull1', name: 'Dumbbell Pullover', defaultSets: 3, repRange: '10–12', isCompound: true },
+    { id: 'extra_im_pull2', name: 'Dumbbell Hammer Curl', defaultSets: 3, repRange: '10–12', isCompound: false },
+  ],
+  ppl_ironmaster_legs: [
+    { id: 'extra_im_legs1', name: 'Dumbbell Hip Thrust', defaultSets: 3, repRange: '10–12', isCompound: true },
+    { id: 'extra_im_legs2', name: 'Seated Calf Raise', defaultSets: 3, repRange: '15–20', isCompound: false },
+  ],
+  // Ironmaster Full Body
+  full_body_ironmaster_full_body: [
+    { id: 'extra_im_fb1', name: 'Cable Face Pull', defaultSets: 3, repRange: '12–15', isCompound: false },
+    { id: 'extra_im_fb2', name: 'Leg Curl', defaultSets: 3, repRange: '10–12', isCompound: false },
   ],
 };
 
-// Exercise equivalents for swap feature
+// ═══════════════════════════════════════════
+//  EXERCISE EQUIVALENTS — Swap alternatives
+// ═══════════════════════════════════════════
+
 export const EXERCISE_EQUIVALENTS: Record<string, { id: string; name: string; sets: number; repRange: string; isCompound: boolean }[]> = {
-  push1: [
-    { id: 'push1_alt1', name: 'Floor Dumbbell Press', sets: 4, repRange: '6–8', isCompound: true },
-  ],
-  push2: [
-    { id: 'push2_alt1', name: 'Decline Dumbbell Press', sets: 3, repRange: '8–10', isCompound: true },
-  ],
-  push3: [
-    { id: 'push3_alt1', name: 'Arnold Press', sets: 3, repRange: '6–8', isCompound: true },
-  ],
-  push4: [
-    { id: 'push4_alt1', name: 'Front Raise', sets: 3, repRange: '12–15', isCompound: false },
-    { id: 'push4_alt2', name: 'Cable Lateral Raise', sets: 3, repRange: '12–15', isCompound: false },
-  ],
-  push5: [
-    { id: 'push5_alt1', name: 'Triceps Kickback', sets: 3, repRange: '10–12', isCompound: false },
-    { id: 'push5_alt2', name: 'Diamond Push-Up', sets: 3, repRange: '10–15', isCompound: false },
-  ],
-  pull1: [
-    { id: 'pull1_alt1', name: 'Bent Over Dumbbell Row', sets: 4, repRange: '6–8', isCompound: true },
-  ],
-  pull2: [
-    { id: 'pull2_alt1', name: 'Stiff Leg Deadlift', sets: 4, repRange: '6–8', isCompound: true },
-  ],
-  pull3: [
-    { id: 'pull3_alt1', name: 'Chest Supported Row', sets: 3, repRange: '8–10', isCompound: true },
-  ],
-  pull4: [
-    { id: 'pull4_alt1', name: 'Band Pull-Apart', sets: 3, repRange: '15–20', isCompound: false },
-  ],
-  pull5: [
-    { id: 'pull5_alt1', name: 'Concentration Curl', sets: 3, repRange: '8–10', isCompound: false },
-  ],
-  pull6: [
-    { id: 'pull6_alt1', name: 'Cross Body Curl', sets: 3, repRange: '10–12', isCompound: false },
-  ],
-  legs1: [
-    { id: 'legs1_alt1', name: 'Sumo Squat', sets: 4, repRange: '8–10', isCompound: true },
-  ],
-  legs2: [
-    { id: 'legs2_alt1', name: 'Reverse Lunge', sets: 3, repRange: '8 cada perna', isCompound: true },
-  ],
-  legs3: [
-    { id: 'legs3_alt1', name: 'Single Leg RDL', sets: 3, repRange: '8–10', isCompound: true },
-  ],
-  legs4: [
-    { id: 'legs4_alt1', name: 'Step Up', sets: 3, repRange: '10 cada perna', isCompound: true },
-  ],
-  legs5: [
-    { id: 'legs5_alt1', name: 'Seated Calf Raise', sets: 4, repRange: '15–20', isCompound: false },
-  ],
-  // Full Body equivalents
-  fb1: [
-    { id: 'fb1_alt1', name: 'Floor Dumbbell Press', sets: 4, repRange: '6–8', isCompound: true },
-  ],
-  fb2: [
-    { id: 'fb2_alt1', name: 'Bent Over Dumbbell Row', sets: 4, repRange: '6–8', isCompound: true },
-  ],
-  fb3: [
-    { id: 'fb3_alt1', name: 'Sumo Squat', sets: 4, repRange: '8–10', isCompound: true },
-  ],
-  fb4: [
-    { id: 'fb4_alt1', name: 'Stiff Leg Deadlift', sets: 4, repRange: '6–8', isCompound: true },
-  ],
-  fb5: [
-    { id: 'fb5_alt1', name: 'Arnold Press', sets: 4, repRange: '6–8', isCompound: true },
-  ],
-  fb7: [
-    { id: 'fb7_alt1', name: 'Hammer Curl', sets: 4, repRange: '8–10', isCompound: false },
-  ],
-  fb8: [
-    { id: 'fb8_alt1', name: 'Triceps Kickback', sets: 4, repRange: '10–12', isCompound: false },
-  ],
+  // Dumbbell PPL
+  push1: [{ id: 'push1_alt1', name: 'Floor Dumbbell Press', sets: 4, repRange: '6–8', isCompound: true }],
+  push2: [{ id: 'push2_alt1', name: 'Decline Dumbbell Press', sets: 4, repRange: '8–10', isCompound: true }],
+  push3: [{ id: 'push3_alt1', name: 'Arnold Press', sets: 4, repRange: '8–10', isCompound: true }],
+  push4: [{ id: 'push4_alt1', name: 'Front Raise', sets: 4, repRange: '12–15', isCompound: false }],
+  push5: [{ id: 'push5_alt1', name: 'Triceps Kickback', sets: 4, repRange: '10–12', isCompound: false }],
+  pull1: [{ id: 'pull1_alt1', name: 'Bent-Over Dumbbell Row', sets: 4, repRange: '6–8', isCompound: true }],
+  pull2: [{ id: 'pull2_alt1', name: 'Dumbbell Pullover', sets: 4, repRange: '8–10', isCompound: true }],
+  pull3: [{ id: 'pull3_alt1', name: 'Band Pull-Apart', sets: 4, repRange: '15–20', isCompound: false }],
+  pull4: [{ id: 'pull4_alt1', name: 'Cross Body Curl', sets: 4, repRange: '10–12', isCompound: false }],
+  pull5: [{ id: 'pull5_alt1', name: 'Concentration Curl', sets: 4, repRange: '10–12', isCompound: false }],
+  legs1: [{ id: 'legs1_alt1', name: 'Sumo Squat', sets: 4, repRange: '8–10', isCompound: true }],
+  legs2: [{ id: 'legs2_alt1', name: 'Reverse Lunge', sets: 4, repRange: '8 each', isCompound: true }],
+  legs3: [{ id: 'legs3_alt1', name: 'Single Leg RDL', sets: 4, repRange: '8–10', isCompound: true }],
+  legs4: [{ id: 'legs4_alt1', name: 'Glute Bridge', sets: 4, repRange: '10–12', isCompound: true }],
+  legs5: [{ id: 'legs5_alt1', name: 'Seated Calf Raise', sets: 4, repRange: '15–20', isCompound: false }],
+  // Dumbbell Full Body
+  fb1: [{ id: 'fb1_alt1', name: 'Floor Dumbbell Press', sets: 4, repRange: '6–8', isCompound: true }],
+  fb2: [{ id: 'fb2_alt1', name: 'Bent-Over Dumbbell Row', sets: 4, repRange: '6–8', isCompound: true }],
+  fb3: [{ id: 'fb3_alt1', name: 'Sumo Squat', sets: 4, repRange: '8–10', isCompound: true }],
+  fb4: [{ id: 'fb4_alt1', name: 'Stiff Leg Deadlift', sets: 4, repRange: '8–10', isCompound: true }],
+  fb5: [{ id: 'fb5_alt1', name: 'Arnold Press', sets: 4, repRange: '8–10', isCompound: true }],
+  fb7: [{ id: 'fb7_alt1', name: 'Hammer Curl', sets: 4, repRange: '10–12', isCompound: false }],
+  fb8: [{ id: 'fb8_alt1', name: 'Triceps Kickback', sets: 4, repRange: '10–12', isCompound: false }],
+  // EZ Bar
+  ez_push1: [{ id: 'ez_push1_alt1', name: 'Dumbbell Floor Press', sets: 4, repRange: '6–8', isCompound: true }],
+  ez_push3: [{ id: 'ez_push3_alt1', name: 'Overhead Triceps Extension', sets: 4, repRange: '10–12', isCompound: false }],
+  ez_pull1: [{ id: 'ez_pull1_alt1', name: 'One-Arm Dumbbell Row', sets: 4, repRange: '6–8', isCompound: true }],
+  ez_pull2: [{ id: 'ez_pull2_alt1', name: 'Dumbbell Curl', sets: 4, repRange: '10–12', isCompound: false }],
+  ez_legs1: [{ id: 'ez_legs1_alt1', name: 'Dumbbell Romanian Deadlift', sets: 4, repRange: '8–10', isCompound: true }],
+  // Ironmaster
+  im_push4: [{ id: 'im_push4_alt1', name: 'Overhead Triceps Extension', sets: 4, repRange: '10–12', isCompound: false }],
+  im_pull1: [{ id: 'im_pull1_alt1', name: 'Dumbbell Pullover', sets: 4, repRange: '8–10', isCompound: true }],
+  im_pull2: [{ id: 'im_pull2_alt1', name: 'One-Arm Dumbbell Row', sets: 4, repRange: '8–10', isCompound: true }],
+  im_pull4: [{ id: 'im_pull4_alt1', name: 'Dumbbell Rear Delt Raise', sets: 4, repRange: '12–15', isCompound: false }],
+  im_legs3: [{ id: 'im_legs3_alt1', name: 'Walking Lunges', sets: 4, repRange: '10 each', isCompound: true }],
+  im_legs4: [{ id: 'im_legs4_alt1', name: 'Dumbbell RDL', sets: 4, repRange: '8–10', isCompound: true }],
+  im_fb2: [{ id: 'im_fb2_alt1', name: 'Dumbbell Pullover', sets: 4, repRange: '8–10', isCompound: true }],
+  im_fb3: [{ id: 'im_fb3_alt1', name: 'One-Arm Dumbbell Row', sets: 4, repRange: '8–10', isCompound: true }],
+  im_fb9: [{ id: 'im_fb9_alt1', name: 'Overhead Triceps Extension', sets: 4, repRange: '10–12', isCompound: false }],
 };
 
 export const DEFAULT_APP_DATA: AppData = {
