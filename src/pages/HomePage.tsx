@@ -53,6 +53,46 @@ export function HomePage({ data, onStartWorkout, onSelectProgram, onContinueLast
         </h1>
       </div>
 
+      {/* Resume / Next Workout Card */}
+      {(() => {
+        if (hasActiveSession && onContinueLastWorkout) {
+          return (
+            <button
+              onClick={onContinueLastWorkout}
+              className="w-full bg-primary text-primary-foreground rounded-xl p-5 flex items-center justify-between active:scale-[0.98] transition-transform shadow-lg"
+            >
+              <div className="flex items-center gap-3">
+                <RotateCcw size={22} />
+                <div className="text-left">
+                  <p className="font-black text-base">CONTINUE WORKOUT</p>
+                  <p className="text-xs opacity-80">You have an active session</p>
+                </div>
+              </div>
+              <ChevronRight size={20} />
+            </button>
+          );
+        }
+        if (activeProgram) {
+          const nextDayLabel = activeProgram.workoutDays[data.nextDayIndex % activeProgram.workoutDays.length];
+          return (
+            <button
+              onClick={() => onSelectProgram(activeProgram.id)}
+              className="w-full bg-card border-2 border-primary rounded-xl p-5 flex items-center justify-between active:scale-[0.98] transition-transform"
+            >
+              <div className="flex items-center gap-3">
+                <Play size={22} className="text-primary" fill="currentColor" />
+                <div className="text-left">
+                  <p className="font-black text-base text-foreground">START NEXT WORKOUT</p>
+                  <p className="text-xs text-muted-foreground">{activeProgram.name} — {nextDayLabel}</p>
+                </div>
+              </div>
+              <ChevronRight size={20} className="text-primary" />
+            </button>
+          );
+        }
+        return null;
+      })()}
+
       {/* Main Workouts */}
       <div className="space-y-3">
         <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">
@@ -112,14 +152,6 @@ export function HomePage({ data, onStartWorkout, onSelectProgram, onContinueLast
 
       {/* Quick Actions */}
       <div className="space-y-3">
-        {hasActiveSession && onContinueLastWorkout && (
-          <button
-            onClick={onContinueLastWorkout}
-            className="w-full flex items-center justify-center gap-2 bg-card border border-primary text-primary font-bold py-3 rounded-xl active:scale-[0.98] transition-transform"
-          >
-            <RotateCcw size={18} /> Resume Workout
-          </button>
-        )}
 
         <div className="flex gap-3">
           {installPrompt && !isInstalled ? (
