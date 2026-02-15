@@ -153,7 +153,7 @@ export function ExerciseCard({
               {set.done ? (
                 <Check size={24} className="text-primary-foreground" strokeWidth={3} />
               ) : (
-                <span className="text-lg font-black text-foreground">{set.reps > 0 ? set.reps : 4}</span>
+                <span className="text-lg font-black text-foreground">{set.reps > 0 ? set.reps : 12}</span>
               )}
             </button>
 
