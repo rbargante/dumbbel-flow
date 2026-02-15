@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAppData } from '@/hooks/useAppData';
 import { BottomNav } from '@/components/BottomNav';
 import { HomePage } from '@/pages/HomePage';
@@ -8,15 +8,25 @@ import { WorkoutPage } from '@/pages/WorkoutPage';
 import { HistoryPage } from '@/pages/HistoryPage';
 import { SettingsPage } from '@/pages/SettingsPage';
 import { PROGRAM_DAY_ORDERS, DAY_ORDER } from '@/data/exercises';
+import { loadActiveSession, clearActiveSession, ActiveSession } from '@/lib/storage';
 
 type Screen = 'home' | 'workout-select' | 'history' | 'settings' | 'pelvic-reset' | 'workout';
 
 const Index = () => {
   const appData = useAppData();
-  const [screen, setScreen] = useState<Screen>('home');
+
+  // Check for active session on mount
+  const savedSession = loadActiveSession();
+
+  const [screen, setScreen] = useState<Screen>(() => savedSession ? 'workout' : 'home');
   const [activeTab, setActiveTab] = useState<'home' | 'history' | 'settings'>('home');
-  const [overrideDayIndex, setOverrideDayIndex] = useState<number | null>(null);
-  const [selectedProgramId, setSelectedProgramId] = useState<string | null>(null);
+  const [overrideDayIndex, setOverrideDayIndex] = useState<number | null>(() =>
+    savedSession ? savedSession.dayIndex : null
+  );
+  const [selectedProgramId, setSelectedProgramId] = useState<string | null>(() =>
+    savedSession ? savedSession.programId : null
+  );
+  const [restoredSession, setRestoredSession] = useState<ActiveSession | null>(savedSession);
 
   const activeProgram = appData.data.programs.find(p => p.isActive);
   const activeProgramId = activeProgram?.id || 'ppl_dumbbell';
@@ -33,6 +43,7 @@ const Index = () => {
   const startWorkoutFlow = (dayIndex?: number) => {
     if (dayIndex !== undefined) setOverrideDayIndex(dayIndex);
     else setOverrideDayIndex(null);
+    setRestoredSession(null); // Fresh workout, no restore
 
     if (appData.data.settings.requirePelvicReset) {
       navigate('pelvic-reset');
@@ -51,11 +62,32 @@ const Index = () => {
 
   const handleFinishWorkout = () => {
     setOverrideDayIndex(null);
+    setRestoredSession(null);
     // Stay in the same program context — go back to workout-select
     navigate('workout-select');
   };
 
+  const handleGoHome = () => {
+    setOverrideDayIndex(null);
+    setSelectedProgramId(null);
+    setRestoredSession(null);
+    navigate('home');
+  };
+
+  const handleResumeFromHome = () => {
+    const session = loadActiveSession();
+    if (session) {
+      setSelectedProgramId(session.programId);
+      setOverrideDayIndex(session.dayIndex);
+      setRestoredSession(session);
+      navigate('workout');
+    }
+  };
+
   const effectiveDayIndex = overrideDayIndex ?? appData.data.nextDayIndex;
+
+  // Check if there's an active session (for the Home resume card)
+  const hasActiveSession = !!loadActiveSession();
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -64,6 +96,8 @@ const Index = () => {
           data={appData.data}
           onStartWorkout={() => navigate('workout-select')}
           onSelectProgram={handleSelectProgram}
+          hasActiveSession={hasActiveSession}
+          onContinueLastWorkout={handleResumeFromHome}
         />
       )}
       {screen === 'workout-select' && (
@@ -87,7 +121,8 @@ const Index = () => {
           data={{ ...appData.data, nextDayIndex: effectiveDayIndex }}
           programId={workoutProgramId}
           onFinish={(workout) => { appData.saveWorkout(workout); handleFinishWorkout(); }}
-          onHome={handleFinishWorkout}
+          onHome={handleGoHome}
+          restoredSession={restoredSession}
         />
       )}
       {screen === 'history' && <HistoryPage workouts={appData.data.workouts} />}
