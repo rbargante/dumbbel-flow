@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback } from 'react';
-import { SetLog, EXERCISE_EQUIVALENTS } from '@/data/exercises';
-import { Minus, Plus, X, RefreshCw, Trophy, Play, Check, Undo2 } from 'lucide-react';
+import { SetLog } from '@/data/exercises';
+import { Minus, Plus, X, Trophy, Play, Check } from 'lucide-react';
 import { ExerciseDemoModal } from '@/components/ExerciseDemoModal';
 import { cn } from '@/lib/utils';
 
@@ -16,10 +16,6 @@ interface ExerciseCardProps {
   onSetsCountChange?: (newCount: number) => void;
   isBase: boolean;
   onRemove?: () => void;
-  onSwap?: (altId: string, altName: string, altSets: number, altRepRange: string, altIsCompound: boolean) => void;
-  isSwapped?: boolean;
-  originalName?: string;
-  onRestore?: () => void;
   isPR?: boolean;
   mediaUrl?: string;
 }
@@ -28,10 +24,8 @@ const WEIGHT_PICKS = [2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32
 const MAX_SETS = 10;
 
 export function ExerciseCard({
-  name, exerciseId, setsCount, repRange, lastSession, currentSets, onSetChange, onSetDone, onSetsCountChange, isBase, onRemove, onSwap, isSwapped, originalName, onRestore, isPR, mediaUrl,
+  name, exerciseId, setsCount, repRange, lastSession, currentSets, onSetChange, onSetDone, onSetsCountChange, isBase, onRemove, isPR, mediaUrl,
 }: ExerciseCardProps) {
-  const [showSwap, setShowSwap] = useState(false);
-  const [showMedia, setShowMedia] = useState(false);
   const [showDemo, setShowDemo] = useState(false);
   // Inline reps editor (tap circle)
   const [editingRepsSet, setEditingRepsSet] = useState<number | null>(null);
@@ -47,7 +41,7 @@ export function ExerciseCard({
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const didLongPress = useRef(false);
 
-  const equivalents = EXERCISE_EQUIVALENTS[exerciseId] || [];
+  
 
   const isAmrap = (setIdx: number) => {
     return repRange.includes('+') && setIdx === currentSets.length - 1;
@@ -138,26 +132,7 @@ export function ExerciseCard({
   };
 
   return (
-    <div className={cn("bg-card rounded-lg p-4 space-y-3", isSwapped && "ring-1 ring-primary/30")}>
-      {/* Substitute badge */}
-      {isSwapped && originalName && (
-        <div className="flex items-center justify-between gap-2 bg-primary/10 rounded-md px-3 py-1.5">
-          <p className="text-xs text-primary font-medium">
-            <RefreshCw size={10} className="inline mr-1" />
-            Substitute for <span className="font-bold">{originalName}</span>
-          </p>
-          {onRestore && (
-            <button
-              onClick={onRestore}
-              className="flex items-center gap-1 text-xs font-bold text-primary active:opacity-70"
-            >
-              <Undo2 size={12} />
-              Restore
-            </button>
-          )}
-        </div>
-      )}
-
+    <div className="bg-card rounded-lg p-4 space-y-3">
       {/* Header */}
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1">
@@ -181,11 +156,6 @@ export function ExerciseCard({
           <button onClick={() => setShowDemo(true)} className="text-primary/60 p-1 active:text-primary">
             <Play size={16} />
           </button>
-          {equivalents.length > 0 && onSwap && (
-            <button onClick={() => setShowSwap(!showSwap)} className="text-muted-foreground p-1">
-              <RefreshCw size={16} />
-            </button>
-          )}
           {!isBase && onRemove && (
             <button onClick={onRemove} className="text-muted-foreground p-1">
               <X size={18} />
@@ -193,38 +163,6 @@ export function ExerciseCard({
           )}
         </div>
       </div>
-
-      {/* Swap panel */}
-      {showSwap && equivalents.length > 0 && (
-        <div className="bg-secondary rounded-lg p-3 space-y-2">
-          <p className="text-xs text-muted-foreground font-semibold uppercase">Swap with:</p>
-          {equivalents.map(alt => (
-            <button
-              key={alt.id}
-              onClick={() => {
-                onSwap?.(alt.id, alt.name, alt.sets, alt.repRange, alt.isCompound);
-                setShowSwap(false);
-              }}
-              className="w-full text-left p-2 rounded-md bg-card text-foreground text-sm font-medium"
-            >
-              {alt.name} — {alt.sets}×{alt.repRange}
-            </button>
-          ))}
-        </div>
-      )}
-
-      {/* Media preview (demo) */}
-      {showMedia && mediaUrl && (
-        <div className="relative rounded-lg overflow-hidden">
-          <img src={mediaUrl} alt={name} className="w-full h-32 object-cover" />
-          <button
-            onClick={() => setShowMedia(false)}
-            className="absolute top-1 right-1 bg-black/60 rounded-full p-1"
-          >
-            <X size={14} className="text-white" />
-          </button>
-        </div>
-      )}
 
       {/* Set circles row */}
       <div className="flex items-start justify-center gap-4 flex-wrap">

@@ -19,8 +19,6 @@ interface WorkoutPageProps {
 
 interface ActiveExercise {
   exercise: Exercise;
-  originalExercise: Exercise;
-  isSwapped: boolean;
   isBase: boolean;
   sets: SetLog[];
   originalId: string;
@@ -51,8 +49,6 @@ export function WorkoutPage({ data, programId, onFinish, onHome }: WorkoutPagePr
   const [exercises, setExercises] = useState<ActiveExercise[]>(() =>
     baseExercises.map(ex => ({
       exercise: ex,
-      originalExercise: ex,
-      isSwapped: false,
       isBase: true,
       originalId: ex.id,
       sets: buildInitialSets(ex.id, ex.sets, data.lastSessionByExercise),
@@ -168,40 +164,8 @@ export function WorkoutPage({ data, programId, onFinish, onHome }: WorkoutPagePr
     scheduleRealTimeSave();
   };
 
-  const handleSwap = (exIdx: number, altId: string, altName: string, altSets: number, altRepRange: string, altIsCompound: boolean) => {
-    setExercises(prev => {
-      const copy = [...prev];
-      const original = copy[exIdx];
-      copy[exIdx] = {
-        ...original,
-        isSwapped: true,
-        exercise: {
-          ...original.exercise,
-          id: altId,
-          name: altName,
-          sets: altSets,
-          repRange: altRepRange,
-          isCompound: altIsCompound,
-        },
-        sets: buildInitialSets(original.originalId, altSets, data.lastSessionByExercise),
-      };
-      return copy;
-    });
-  };
 
-  const handleRestore = (exIdx: number) => {
-    setExercises(prev => {
-      const copy = [...prev];
-      const current = copy[exIdx];
-      copy[exIdx] = {
-        ...current,
-        isSwapped: false,
-        exercise: current.originalExercise,
-        sets: buildInitialSets(current.originalId, current.originalExercise.sets, data.lastSessionByExercise),
-      };
-      return copy;
-    });
-  };
+
 
   const addExtra = (extra: typeof extras[0]) => {
     const exData: Exercise = {
@@ -215,8 +179,6 @@ export function WorkoutPage({ data, programId, onFinish, onHome }: WorkoutPagePr
     };
     const newEx: ActiveExercise = {
       exercise: exData,
-      originalExercise: exData,
-      isSwapped: false,
       isBase: false,
       originalId: extra.id,
       sets: buildInitialSets(extra.id, extra.defaultSets, data.lastSessionByExercise),
@@ -329,12 +291,6 @@ export function WorkoutPage({ data, programId, onFinish, onHome }: WorkoutPagePr
             onSetsCountChange={(count) => handleSetsCountChange(i, count)}
             isBase={ex.isBase}
             onRemove={ex.isBase ? undefined : () => removeExercise(i)}
-            onSwap={(altId, altName, altSets, altRepRange, altIsCompound) =>
-              handleSwap(i, altId, altName, altSets, altRepRange, altIsCompound)
-            }
-            isSwapped={ex.isSwapped}
-            originalName={ex.isSwapped ? ex.originalExercise.name : undefined}
-            onRestore={ex.isSwapped ? () => handleRestore(i) : undefined}
             isPR={prExercises.has(ex.exercise.id)}
             mediaUrl={ex.exercise.mediaUrl}
           />
