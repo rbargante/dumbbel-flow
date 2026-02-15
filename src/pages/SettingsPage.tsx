@@ -3,6 +3,48 @@ import { Download, Upload } from 'lucide-react';
 import { useRef } from 'react';
 import { cn } from '@/lib/utils';
 import { getLastSaved } from '@/lib/storage';
+import { z } from 'zod';
+
+const SetLogSchema = z.object({
+  weight: z.number(),
+  reps: z.number(),
+  done: z.boolean(),
+  isWarmup: z.boolean().optional(),
+});
+
+const AppDataSchema = z.object({
+  nextDayIndex: z.number().int().min(0),
+  workouts: z.array(z.object({
+    id: z.string(),
+    date: z.string(),
+    day: z.string(),
+    exercises: z.array(z.object({
+      exerciseId: z.string(),
+      exerciseName: z.string(),
+      sets: z.array(SetLogSchema),
+    })),
+    durationSeconds: z.number().optional(),
+    totalKg: z.number().optional(),
+    programId: z.string().optional(),
+  })),
+  lastSessionByExercise: z.record(z.string(), z.array(SetLogSchema)),
+  settings: z.object({
+    restTimerEnabled: z.boolean(),
+    soundEnabled: z.boolean(),
+    requirePelvicReset: z.boolean(),
+  }),
+  programs: z.array(z.object({
+    id: z.string(),
+    name: z.string(),
+    type: z.string(),
+    isActive: z.boolean(),
+    equipment: z.array(z.string()),
+    workoutDays: z.array(z.string()),
+    rotationIndex: z.number(),
+    comingSoon: z.boolean().optional(),
+    category: z.string().optional(),
+  })),
+});
 
 interface SettingsPageProps {
   settings: AppSettings;
@@ -53,13 +95,22 @@ export function SettingsPage({ settings, hydrated, workoutsCount, onUpdateSettin
   const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (file.size > 10 * 1024 * 1024) {
+      alert('File too large. Maximum size is 10MB.');
+      return;
+    }
     const reader = new FileReader();
     reader.onload = () => {
       try {
-        const data = JSON.parse(reader.result as string);
-        onImport(data);
-      } catch {
-        alert('Invalid backup file');
+        const parsed = JSON.parse(reader.result as string);
+        const validated = AppDataSchema.parse(parsed);
+        onImport(validated as AppData);
+      } catch (error) {
+        if (error instanceof z.ZodError) {
+          alert('Invalid backup format: ' + error.errors.map(e => e.message).join(', '));
+        } else {
+          alert('Invalid backup file');
+        }
       }
     };
     reader.readAsText(file);
