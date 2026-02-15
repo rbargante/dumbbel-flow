@@ -210,7 +210,7 @@ export function ExerciseCard({
           <div className="flex gap-2">
             <button onClick={() => setEditingRepsSet(null)} className="flex-1 text-center text-xs text-muted-foreground py-2">Cancel</button>
             <button
-              onClick={() => handleMarkDone(editingRepsSet)}
+              onClick={() => setEditingRepsSet(null)}
               className="flex-1 bg-primary text-primary-foreground font-bold py-2 rounded-lg text-sm flex items-center justify-center gap-1"
             >
               <Check size={14} /> Done
