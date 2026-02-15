@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback } from 'react';
 import { SetLog, EXERCISE_EQUIVALENTS } from '@/data/exercises';
-import { Minus, Plus, X, RefreshCw, Trophy, Image, Check } from 'lucide-react';
+import { Minus, Plus, X, RefreshCw, Trophy, Image, Check, Undo2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface ExerciseCardProps {
@@ -16,6 +16,9 @@ interface ExerciseCardProps {
   isBase: boolean;
   onRemove?: () => void;
   onSwap?: (altId: string, altName: string, altSets: number, altRepRange: string, altIsCompound: boolean) => void;
+  isSwapped?: boolean;
+  originalName?: string;
+  onRestore?: () => void;
   isPR?: boolean;
   mediaUrl?: string;
 }
@@ -24,7 +27,7 @@ const WEIGHT_PICKS = [2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32
 const MAX_SETS = 10;
 
 export function ExerciseCard({
-  name, exerciseId, setsCount, repRange, lastSession, currentSets, onSetChange, onSetDone, onSetsCountChange, isBase, onRemove, onSwap, isPR, mediaUrl,
+  name, exerciseId, setsCount, repRange, lastSession, currentSets, onSetChange, onSetDone, onSetsCountChange, isBase, onRemove, onSwap, isSwapped, originalName, onRestore, isPR, mediaUrl,
 }: ExerciseCardProps) {
   const [showSwap, setShowSwap] = useState(false);
   const [showMedia, setShowMedia] = useState(false);
@@ -120,7 +123,26 @@ export function ExerciseCard({
   }, [currentSets.length, onSetsCountChange]);
 
   return (
-    <div className="bg-card rounded-lg p-4 space-y-3">
+    <div className={cn("bg-card rounded-lg p-4 space-y-3", isSwapped && "ring-1 ring-primary/30")}>
+      {/* Substitute badge */}
+      {isSwapped && originalName && (
+        <div className="flex items-center justify-between gap-2 bg-primary/10 rounded-md px-3 py-1.5">
+          <p className="text-xs text-primary font-medium">
+            <RefreshCw size={10} className="inline mr-1" />
+            Substitute for <span className="font-bold">{originalName}</span>
+          </p>
+          {onRestore && (
+            <button
+              onClick={onRestore}
+              className="flex items-center gap-1 text-xs font-bold text-primary active:opacity-70"
+            >
+              <Undo2 size={12} />
+              Restore
+            </button>
+          )}
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1">
