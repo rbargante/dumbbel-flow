@@ -292,7 +292,7 @@ export function WorkoutPage({ data, programId, onFinish, onHome }: WorkoutPagePr
             isBase={ex.isBase}
             onRemove={ex.isBase ? undefined : () => removeExercise(i)}
             isPR={prExercises.has(ex.exercise.id)}
-            mediaUrl={ex.exercise.mediaUrl}
+            
           />
         </div>
       ))}

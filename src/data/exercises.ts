@@ -37,7 +37,7 @@ export interface Exercise {
   isCompound: boolean;
   day: WorkoutDay;
   programId: string;
-  mediaUrl?: string;
+  
 }
 
 export interface SetLog {

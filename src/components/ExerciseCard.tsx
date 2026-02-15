@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { SetLog } from '@/data/exercises';
 import { Minus, Plus, X, Trophy, Check } from 'lucide-react';
-import { ExerciseDemoModal } from '@/components/ExerciseDemoModal';
+import { ExerciseTipsModal } from '@/components/ExerciseTipsModal';
 import { cn } from '@/lib/utils';
 
 interface ExerciseCardProps {
@@ -17,15 +17,14 @@ interface ExerciseCardProps {
   isBase: boolean;
   onRemove?: () => void;
   isPR?: boolean;
-  mediaUrl?: string;
 }
 
 const MAX_SETS = 10;
 
 export function ExerciseCard({
-  name, exerciseId, setsCount, repRange, lastSession, currentSets, onSetChange, onSetDone, onSetsCountChange, isBase, onRemove, isPR, mediaUrl,
+  name, exerciseId, setsCount, repRange, lastSession, currentSets, onSetChange, onSetDone, onSetsCountChange, isBase, onRemove, isPR,
 }: ExerciseCardProps) {
-  const [showDemo, setShowDemo] = useState(false);
+  const [showTips, setShowTips] = useState(false);
 
   // Inline reps editor (tap circle)
   const [editingRepsSet, setEditingRepsSet] = useState<number | null>(null);
@@ -82,7 +81,7 @@ export function ExerciseCard({
           <div className="flex items-center gap-2">
             <h3
               className="font-bold text-foreground text-base active:text-primary cursor-pointer"
-              onClick={() => setShowDemo(true)}
+              onClick={() => setShowTips(true)}
             >
               {name}
             </h3>
@@ -238,9 +237,9 @@ export function ExerciseCard({
         </p>
       )}
 
-      {/* Demo Modal */}
-      {showDemo && (
-        <ExerciseDemoModal exerciseName={name} onClose={() => setShowDemo(false)} />
+      {/* Technique Tips Modal */}
+      {showTips && (
+        <ExerciseTipsModal exerciseName={name} onClose={() => setShowTips(false)} />
       )}
     </div>
   );

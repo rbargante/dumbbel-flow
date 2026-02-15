@@ -1,9 +1,8 @@
 import { AppSettings, AppData } from '@/data/exercises';
-import { Download, Upload, Trash2 } from 'lucide-react';
-import { useRef, useState, useEffect } from 'react';
+import { Download, Upload } from 'lucide-react';
+import { useRef } from 'react';
 import { cn } from '@/lib/utils';
 import { getLastSaved } from '@/lib/storage';
-import { getDemoCacheStats, clearDemoCache } from '@/lib/demoCache';
 
 interface SettingsPageProps {
   settings: AppSettings;
@@ -39,19 +38,6 @@ function Toggle({ label, checked, onChange, description }: { label: string; chec
 
 export function SettingsPage({ settings, hydrated, workoutsCount, onUpdateSettings, onExport, onImport }: SettingsPageProps) {
   const fileRef = useRef<HTMLInputElement>(null);
-  const [cacheStats, setCacheStats] = useState({ count: 0, sizeKB: 0 });
-  const [clearing, setClearing] = useState(false);
-
-  useEffect(() => {
-    getDemoCacheStats().then(setCacheStats);
-  }, []);
-
-  const handleClearCache = async () => {
-    setClearing(true);
-    await clearDemoCache();
-    setCacheStats({ count: 0, sizeKB: 0 });
-    setClearing(false);
-  };
 
   const handleExport = () => {
     const json = onExport();
@@ -86,34 +72,6 @@ export function SettingsPage({ settings, hydrated, workoutsCount, onUpdateSettin
       <Toggle label="Rest Timer" checked={settings.restTimerEnabled} onChange={v => onUpdateSettings({ restTimerEnabled: v })} />
       <Toggle label="Sound" checked={settings.soundEnabled} onChange={v => onUpdateSettings({ soundEnabled: v })} />
       <Toggle label="Require Pelvic Reset" checked={settings.requirePelvicReset} onChange={v => onUpdateSettings({ requirePelvicReset: v })} />
-
-      {/* Demo Cache */}
-      <div className="bg-card rounded-xl p-4 space-y-3">
-        <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Demo Cache</p>
-        <div className="flex justify-between text-sm">
-          <span className="text-muted-foreground">Cached demos</span>
-          <span className="text-foreground font-mono">{cacheStats.count}</span>
-        </div>
-        <div className="flex justify-between text-sm">
-          <span className="text-muted-foreground">Cache size</span>
-          <span className="text-foreground font-mono">
-            {cacheStats.sizeKB > 1024 ? `${(cacheStats.sizeKB / 1024).toFixed(1)} MB` : `${cacheStats.sizeKB} KB`}
-          </span>
-        </div>
-        <button
-          onClick={handleClearCache}
-          disabled={clearing || cacheStats.count === 0}
-          className={cn(
-            'w-full flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-medium transition-colors',
-            cacheStats.count > 0
-              ? 'bg-destructive/20 text-destructive active:bg-destructive/30'
-              : 'bg-secondary text-muted-foreground cursor-not-allowed'
-          )}
-        >
-          <Trash2 size={14} />
-          {clearing ? 'Clearing...' : 'Clear demo cache'}
-        </button>
-      </div>
 
       <button onClick={handleExport} className="w-full bg-card rounded-xl p-4 flex items-center gap-3 text-foreground font-medium">
         <Download size={20} className="text-primary" />
