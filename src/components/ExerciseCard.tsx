@@ -1,8 +1,8 @@
-import { useState, useRef, useCallback, useMemo } from 'react';
+import { useState, useRef, useCallback, useMemo, useEffect } from 'react';
 import { SetLog } from '@/data/exercises';
 import { Minus, Plus, X, Trophy, Play, Check } from 'lucide-react';
 import { ExerciseDemoModal } from '@/components/ExerciseDemoModal';
-import { getDemoForExercise } from '@/data/demoRegistry';
+import { isDemoCached } from '@/lib/demoCache';
 import { cn } from '@/lib/utils';
 
 interface ExerciseCardProps {
@@ -28,7 +28,14 @@ export function ExerciseCard({
   name, exerciseId, setsCount, repRange, lastSession, currentSets, onSetChange, onSetDone, onSetsCountChange, isBase, onRemove, isPR, mediaUrl,
 }: ExerciseCardProps) {
   const [showDemo, setShowDemo] = useState(false);
-  const demo = useMemo(() => getDemoForExercise(name), [name]);
+  // Always allow opening demo - it will fetch on open or show fallback
+  const [hasCachedDemo, setHasCachedDemo] = useState(false);
+
+  // Check if demo is cached (for showing play icon proactively)
+  useEffect(() => {
+    isDemoCached(name).then(setHasCachedDemo);
+  }, [name]);
+
   // Inline reps editor (tap circle)
   const [editingRepsSet, setEditingRepsSet] = useState<number | null>(null);
   // Inline weight editor (tap weight label)
@@ -43,8 +50,6 @@ export function ExerciseCard({
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const didLongPress = useRef(false);
 
-  
-
   const isAmrap = (setIdx: number) => {
     return repRange.includes('+') && setIdx === currentSets.length - 1;
   };
@@ -54,7 +59,6 @@ export function ExerciseCard({
     didLongPress.current = false;
     longPressTimer.current = setTimeout(() => {
       didLongPress.current = true;
-      // Long-press on last circle = remove it
       if (i === currentSets.length - 1 && currentSets.length > 1 && onSetsCountChange) {
         onSetsCountChange(currentSets.length - 1);
       } else {
@@ -75,14 +79,11 @@ export function ExerciseCard({
       didLongPress.current = false;
       return;
     }
-    // Normal tap on circle → edit reps only (or toggle done if already done)
     const set = currentSets[i];
     if (set.done) {
-      // Tap completed set → uncomplete it
       onSetDone(i);
       return;
     }
-    // Open inline reps editor for this set
     setEditingRepsSet(editingRepsSet === i ? null : i);
     setEditingWeightSet(null);
   }, [currentSets, onSetDone, editingRepsSet]);
@@ -140,8 +141,8 @@ export function ExerciseCard({
         <div className="flex-1">
           <div className="flex items-center gap-2">
             <h3
-              className={cn("font-bold text-foreground text-base", demo && "active:text-primary cursor-pointer")}
-              onClick={() => { if (demo) setShowDemo(true); }}
+              className="font-bold text-foreground text-base active:text-primary cursor-pointer"
+              onClick={() => setShowDemo(true)}
             >
               {name}
             </h3>
@@ -155,11 +156,9 @@ export function ExerciseCard({
           <p className="text-sm text-muted-foreground">{currentSets.length} × {repRange}</p>
         </div>
         <div className="flex items-center gap-1">
-          {demo && (
-            <button onClick={() => setShowDemo(true)} className="text-primary/60 p-1 active:text-primary">
-              <Play size={16} />
-            </button>
-          )}
+          <button onClick={() => setShowDemo(true)} className="text-primary/60 p-1 active:text-primary">
+            <Play size={16} />
+          </button>
           {!isBase && onRemove && (
             <button onClick={onRemove} className="text-muted-foreground p-1">
               <X size={18} />
@@ -192,7 +191,6 @@ export function ExerciseCard({
               )}
             </button>
 
-            {/* Per-set weight below circle */}
             <button
               onClick={() => {
                 setEditingWeightSet(editingWeightSet === i ? null : i);
@@ -207,7 +205,6 @@ export function ExerciseCard({
             </button>
           </div>
         ))}
-        {/* + Add set button */}
         {onSetsCountChange && currentSets.length < MAX_SETS && (
           <div className="flex flex-col items-center gap-1">
             <button
@@ -221,7 +218,7 @@ export function ExerciseCard({
         )}
       </div>
 
-      {/* Inline reps editor (tap circle) */}
+      {/* Inline reps editor */}
       {editingRepsSet !== null && !currentSets[editingRepsSet]?.done && (
         <div className="bg-secondary rounded-lg p-3 space-y-2">
           <p className="text-xs text-muted-foreground font-semibold uppercase text-center">
@@ -245,12 +242,7 @@ export function ExerciseCard({
             </button>
           </div>
           <div className="flex gap-2">
-            <button
-              onClick={() => setEditingRepsSet(null)}
-              className="flex-1 text-center text-xs text-muted-foreground py-2"
-            >
-              Cancel
-            </button>
+            <button onClick={() => setEditingRepsSet(null)} className="flex-1 text-center text-xs text-muted-foreground py-2">Cancel</button>
             <button
               onClick={() => handleMarkDone(editingRepsSet)}
               className="flex-1 bg-primary text-primary-foreground font-bold py-2 rounded-lg text-sm flex items-center justify-center gap-1"
@@ -261,7 +253,7 @@ export function ExerciseCard({
         </div>
       )}
 
-      {/* Per-set weight editor (tap weight label) */}
+      {/* Per-set weight editor */}
       {editingWeightSet !== null && (
         <div className="bg-secondary rounded-lg p-3 space-y-3">
           <p className="text-xs text-muted-foreground font-semibold uppercase text-center">
@@ -304,70 +296,30 @@ export function ExerciseCard({
         </div>
       )}
 
-      {/* Long-press Edit Modal (both reps + weight) */}
+      {/* Long-press Edit Modal */}
       {editingSet !== null && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70" onClick={() => setEditingSet(null)}>
           <div className="bg-card rounded-xl p-6 w-80 space-y-5" onClick={e => e.stopPropagation()}>
             <h3 className="text-lg font-black text-foreground text-center">Edit Set {editingSet + 1}</h3>
-
-            {/* Reps stepper */}
             <div className="space-y-2">
               <p className="text-xs text-muted-foreground font-semibold uppercase text-center">Reps</p>
               <div className="flex items-center justify-center gap-4">
-                <button
-                  onClick={() => setEditReps(Math.max(0, editReps - 1))}
-                  className="w-12 h-12 rounded-full bg-secondary text-foreground flex items-center justify-center"
-                >
-                  <Minus size={20} />
-                </button>
-                <span className="text-4xl font-black text-foreground tabular-nums min-w-[60px] text-center">
-                  {editReps || '—'}
-                </span>
-                <button
-                  onClick={() => setEditReps(editReps + 1)}
-                  className="w-12 h-12 rounded-full bg-secondary text-foreground flex items-center justify-center"
-                >
-                  <Plus size={20} />
-                </button>
+                <button onClick={() => setEditReps(Math.max(0, editReps - 1))} className="w-12 h-12 rounded-full bg-secondary text-foreground flex items-center justify-center"><Minus size={20} /></button>
+                <span className="text-4xl font-black text-foreground tabular-nums min-w-[60px] text-center">{editReps || '—'}</span>
+                <button onClick={() => setEditReps(editReps + 1)} className="w-12 h-12 rounded-full bg-secondary text-foreground flex items-center justify-center"><Plus size={20} /></button>
               </div>
             </div>
-
-            {/* Weight stepper */}
             <div className="space-y-2">
               <p className="text-xs text-muted-foreground font-semibold uppercase text-center">Weight</p>
               <div className="flex items-center justify-center gap-4">
-                <button
-                  onClick={() => setEditWeight(Math.max(0, editWeight - 2))}
-                  className="w-12 h-12 rounded-full bg-secondary text-foreground flex items-center justify-center"
-                >
-                  <Minus size={20} />
-                </button>
-                <span className="text-3xl font-black text-foreground tabular-nums min-w-[70px] text-center">
-                  {editWeight}<span className="text-sm text-muted-foreground ml-1">kg</span>
-                </span>
-                <button
-                  onClick={() => setEditWeight(Math.min(200, editWeight + 2))}
-                  className="w-12 h-12 rounded-full bg-secondary text-foreground flex items-center justify-center"
-                >
-                  <Plus size={20} />
-                </button>
+                <button onClick={() => setEditWeight(Math.max(0, editWeight - 2))} className="w-12 h-12 rounded-full bg-secondary text-foreground flex items-center justify-center"><Minus size={20} /></button>
+                <span className="text-3xl font-black text-foreground tabular-nums min-w-[70px] text-center">{editWeight}<span className="text-sm text-muted-foreground ml-1">kg</span></span>
+                <button onClick={() => setEditWeight(Math.min(200, editWeight + 2))} className="w-12 h-12 rounded-full bg-secondary text-foreground flex items-center justify-center"><Plus size={20} /></button>
               </div>
             </div>
-
-            {/* Actions */}
             <div className="flex gap-2">
-              <button
-                onClick={resetEditSet}
-                className="flex-1 bg-secondary text-muted-foreground font-bold py-3 rounded-lg text-sm"
-              >
-                Reset
-              </button>
-              <button
-                onClick={confirmEditSet}
-                className="flex-1 bg-primary text-primary-foreground font-bold py-3 rounded-lg text-lg"
-              >
-                OK
-              </button>
+              <button onClick={resetEditSet} className="flex-1 bg-secondary text-muted-foreground font-bold py-3 rounded-lg text-sm">Reset</button>
+              <button onClick={confirmEditSet} className="flex-1 bg-primary text-primary-foreground font-bold py-3 rounded-lg text-lg">OK</button>
             </div>
           </div>
         </div>
@@ -380,28 +332,11 @@ export function ExerciseCard({
             <h3 className="text-lg font-black text-foreground text-center">AMRAP</h3>
             <p className="text-sm text-muted-foreground text-center">Enter reps achieved</p>
             <div className="flex items-center justify-center gap-4">
-              <button
-                onClick={() => setAmrapReps(Math.max(1, amrapReps - 1))}
-                className="w-12 h-12 rounded-full bg-secondary text-foreground flex items-center justify-center"
-              >
-                <Minus size={20} />
-              </button>
-              <span className="text-4xl font-black text-foreground tabular-nums min-w-[60px] text-center">
-                {amrapReps}
-              </span>
-              <button
-                onClick={() => setAmrapReps(amrapReps + 1)}
-                className="w-12 h-12 rounded-full bg-secondary text-foreground flex items-center justify-center"
-              >
-                <Plus size={20} />
-              </button>
+              <button onClick={() => setAmrapReps(Math.max(1, amrapReps - 1))} className="w-12 h-12 rounded-full bg-secondary text-foreground flex items-center justify-center"><Minus size={20} /></button>
+              <span className="text-4xl font-black text-foreground tabular-nums min-w-[60px] text-center">{amrapReps}</span>
+              <button onClick={() => setAmrapReps(amrapReps + 1)} className="w-12 h-12 rounded-full bg-secondary text-foreground flex items-center justify-center"><Plus size={20} /></button>
             </div>
-            <button
-              onClick={confirmAmrap}
-              className="w-full bg-primary text-primary-foreground font-bold py-3 rounded-lg text-lg"
-            >
-              OK
-            </button>
+            <button onClick={confirmAmrap} className="w-full bg-primary text-primary-foreground font-bold py-3 rounded-lg text-lg">OK</button>
           </div>
         </div>
       )}
@@ -414,8 +349,8 @@ export function ExerciseCard({
       )}
 
       {/* Demo Modal */}
-      {showDemo && demo && (
-        <ExerciseDemoModal exerciseName={name} demo={demo} onClose={() => setShowDemo(false)} />
+      {showDemo && (
+        <ExerciseDemoModal exerciseName={name} onClose={() => setShowDemo(false)} />
       )}
     </div>
   );
