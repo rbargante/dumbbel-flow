@@ -51,8 +51,8 @@ const Index = () => {
 
   const handleFinishWorkout = () => {
     setOverrideDayIndex(null);
-    setSelectedProgramId(null);
-    navigate('home');
+    // Stay in the same program context — go back to workout-select
+    navigate('workout-select');
   };
 
   const effectiveDayIndex = overrideDayIndex ?? appData.data.nextDayIndex;
