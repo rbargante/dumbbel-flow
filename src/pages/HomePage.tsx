@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { AppData, Program, DAY_NAMES, DAY_ORDER } from '@/data/exercises';
-import { Dumbbell, ChevronRight, Download, Share2, Play, Lock, RotateCcw } from 'lucide-react';
+import { Dumbbell, ChevronRight, Download, Share2, Play, Lock, RotateCcw, Grip, Activity } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 interface BeforeInstallPromptEvent extends Event {
@@ -14,6 +14,14 @@ interface HomePageProps {
   onSelectProgram: (programId: string) => void;
   onContinueLastWorkout?: () => void;
   hasActiveSession?: boolean;
+}
+
+function getEquipmentIcon(equipment: string[]) {
+  const first = equipment[0]?.toLowerCase() || '';
+  if (first.includes('ez')) return <Grip size={18} className="text-primary" />;
+  if (first.includes('ironmaster')) return <Dumbbell size={18} className="text-primary" />;
+  if (first.includes('bodyweight')) return <Activity size={18} className="text-primary" />;
+  return <Dumbbell size={18} className="text-primary" />;
 }
 
 export function HomePage({ data, onStartWorkout, onSelectProgram, onContinueLastWorkout, hasActiveSession }: HomePageProps) {
@@ -41,21 +49,24 @@ export function HomePage({ data, onStartWorkout, onSelectProgram, onContinueLast
   const handleShare = async () => {
     const shareData = {
       title: 'Ricardo Routine',
-      text: 'Instala a minha app de treino Ricardo Routine',
+      text: 'Check out Ricardo Routine — offline workout tracker',
       url: window.location.href,
     };
     if (navigator.share) {
       try { await navigator.share(shareData); } catch {}
     } else {
       await navigator.clipboard.writeText(window.location.href);
-      toast({ title: 'Link copiado' });
+      toast({ title: 'Link copied' });
     }
   };
 
   const activeProgram = data.programs.find(p => p.isActive);
   const nextDayLabel = activeProgram
     ? activeProgram.workoutDays[data.nextDayIndex % activeProgram.workoutDays.length]
-    : DAY_NAMES[DAY_ORDER[data.nextDayIndex]];
+    : '';
+
+  const mainPrograms = data.programs.filter(p => p.category !== 'complementary');
+  const complementaryPrograms = data.programs.filter(p => p.category === 'complementary');
 
   return (
     <div className="px-4 pt-10 pb-24 max-w-md mx-auto space-y-6">
@@ -65,16 +76,14 @@ export function HomePage({ data, onStartWorkout, onSelectProgram, onContinueLast
         <h1 className="text-2xl font-black tracking-tight text-foreground">
           Ricardo Routine
         </h1>
-        <p className="text-muted-foreground text-xs">Choose your program</p>
       </div>
 
-      {/* Programs */}
+      {/* Main Workouts */}
       <div className="space-y-3">
         <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">
-          Programs
+          Main Workouts
         </p>
-
-        {data.programs.map((program) => (
+        {mainPrograms.map((program) => (
           <ProgramCard
             key={program.id}
             program={program}
@@ -88,19 +97,32 @@ export function HomePage({ data, onStartWorkout, onSelectProgram, onContinueLast
         ))}
       </div>
 
-      {/* Quick Actions */}
+      {/* Complementary */}
       <div className="space-y-3">
         <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">
-          Quick Actions
+          Complementary
         </p>
+        {complementaryPrograms.map((program) => (
+          <ProgramCard
+            key={program.id}
+            program={program}
+            nextDayLabel={program.workoutDays[0]}
+            onStart={() => {
+              if (!program.comingSoon) onSelectProgram(program.id);
+            }}
+          />
+        ))}
+      </div>
 
+      {/* Quick Actions */}
+      <div className="space-y-3">
         {/* Continue Last Workout */}
         {hasActiveSession && onContinueLastWorkout && (
           <button
             onClick={onContinueLastWorkout}
             className="w-full flex items-center justify-center gap-2 bg-card border border-primary text-primary font-bold py-3 rounded-xl active:scale-[0.98] transition-transform"
           >
-            <RotateCcw size={18} /> Continue Last Workout
+            <RotateCcw size={18} /> Resume Workout
           </button>
         )}
 
@@ -163,6 +185,7 @@ function ProgramCard({
       {/* Top row */}
       <div className="space-y-1.5">
         <div className="flex items-center gap-2">
+          {getEquipmentIcon(program.equipment)}
           <h3 className="text-base font-bold text-foreground truncate">
             {program.name}
           </h3>
@@ -178,7 +201,7 @@ function ProgramCard({
           )}
         </div>
         {/* Equipment tags */}
-        <div className="flex gap-1.5 flex-wrap">
+        <div className="flex gap-1.5 flex-wrap ml-[26px]">
           {program.equipment.map(eq => (
             <span key={eq} className="text-[10px] bg-secondary text-muted-foreground px-2 py-0.5 rounded-md">
               {eq}
