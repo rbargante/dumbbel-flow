@@ -1,7 +1,50 @@
-import { AppData, DEFAULT_APP_DATA, DEFAULT_PROGRAMS } from '@/data/exercises';
+import { AppData, DEFAULT_APP_DATA, DEFAULT_PROGRAMS, SetLog } from '@/data/exercises';
 
 const KEY = 'ricardo_routine_v2';
 const OLD_KEY = 'ricardo_routine_state_v1';
+const SESSION_KEY = 'ricardo_active_session';
+
+// ─── Active Workout Session ───
+
+export interface ActiveSession {
+  programId: string;
+  dayIndex: number;
+  startedAt: number;
+  exercises: {
+    exerciseId: string;
+    originalId: string;
+    name: string;
+    sets: number;
+    repRange: string;
+    isCompound: boolean;
+    isBase: boolean;
+    currentSets: SetLog[];
+  }[];
+}
+
+export function saveActiveSession(session: ActiveSession): void {
+  localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+}
+
+export function loadActiveSession(): ActiveSession | null {
+  try {
+    const raw = localStorage.getItem(SESSION_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === 'object' && 'programId' in parsed && 'exercises' in parsed) {
+      return parsed as ActiveSession;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+export function clearActiveSession(): void {
+  localStorage.removeItem(SESSION_KEY);
+}
+
+// ─── App Data ───
 
 export function loadState(): AppData | null {
   try {

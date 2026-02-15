@@ -7,6 +7,7 @@ import { ExerciseCard } from '@/components/ExerciseCard';
 import { RestTimerBar } from '@/components/RestTimerBar';
 import { useRestTimer } from '@/hooks/useRestTimer';
 import { saveState } from '@/lib/storage';
+import { saveActiveSession, clearActiveSession, ActiveSession } from '@/lib/storage';
 import { Plus, Timer, Dumbbell, Home, ArrowLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -15,6 +16,7 @@ interface WorkoutPageProps {
   programId: string;
   onFinish: (workout: WorkoutLog) => void;
   onHome?: () => void;
+  restoredSession?: ActiveSession | null;
 }
 
 interface ActiveExercise {
@@ -34,30 +36,76 @@ function buildInitialSets(exerciseId: string, setsCount: number, lastSession: Re
   });
 }
 
-export function WorkoutPage({ data, programId, onFinish, onHome }: WorkoutPageProps) {
+export function WorkoutPage({ data, programId, onFinish, onHome, restoredSession }: WorkoutPageProps) {
   const dayOrder = PROGRAM_DAY_ORDERS[programId] || DAY_ORDER;
   const day = dayOrder[data.nextDayIndex % dayOrder.length];
 
   const baseExercises = BASE_EXERCISES.filter(e => e.day === day && e.programId === programId);
   const timer = useRestTimer(data.settings.soundEnabled);
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const startTimeRef = useRef(Date.now());
+  const startTimeRef = useRef(restoredSession?.startedAt ?? Date.now());
   const [elapsed, setElapsed] = useState(0);
   const [skipWarmup, setSkipWarmup] = useState(false);
   const [showExitDialog, setShowExitDialog] = useState(false);
 
-  const [exercises, setExercises] = useState<ActiveExercise[]>(() =>
-    baseExercises.map(ex => ({
+  const [exercises, setExercises] = useState<ActiveExercise[]>(() => {
+    // Restore from session if available
+    if (restoredSession && restoredSession.programId === programId) {
+      return restoredSession.exercises.map(saved => {
+        const baseEx = BASE_EXERCISES.find(e => e.id === saved.exerciseId);
+        const exercise: Exercise = baseEx || {
+          id: saved.exerciseId,
+          name: saved.name,
+          sets: saved.sets,
+          repRange: saved.repRange,
+          isCompound: saved.isCompound,
+          day,
+          programId,
+        };
+        return {
+          exercise,
+          isBase: saved.isBase,
+          originalId: saved.originalId,
+          sets: saved.currentSets,
+        };
+      });
+    }
+    return baseExercises.map(ex => ({
       exercise: ex,
       isBase: true,
       originalId: ex.id,
       sets: buildInitialSets(ex.id, ex.sets, data.lastSessionByExercise),
-    }))
-  );
+    }));
+  });
 
   const [showExtras, setShowExtras] = useState(false);
   const extrasKey = `${programId}_${day}`;
   const extras = EXTRA_EXERCISES[extrasKey] || [];
+
+  // Persist active session on every exercise/set change
+  const persistSession = (currentExercises: ActiveExercise[]) => {
+    const session: ActiveSession = {
+      programId,
+      dayIndex: data.nextDayIndex,
+      startedAt: startTimeRef.current,
+      exercises: currentExercises.map(ex => ({
+        exerciseId: ex.exercise.id,
+        originalId: ex.originalId,
+        name: ex.exercise.name,
+        sets: ex.exercise.sets,
+        repRange: ex.exercise.repRange,
+        isCompound: ex.exercise.isCompound,
+        isBase: ex.isBase,
+        currentSets: ex.sets,
+      })),
+    };
+    saveActiveSession(session);
+  };
+
+  // Save session on mount and whenever exercises change
+  useEffect(() => {
+    persistSession(exercises);
+  }, [exercises]);
 
   // Duration timer
   useEffect(() => {
@@ -164,9 +212,6 @@ export function WorkoutPage({ data, programId, onFinish, onHome }: WorkoutPagePr
     scheduleRealTimeSave();
   };
 
-
-
-
   const addExtra = (extra: typeof extras[0]) => {
     const exData: Exercise = {
       id: `${extra.id}_${Date.now()}`,
@@ -193,6 +238,7 @@ export function WorkoutPage({ data, programId, onFinish, onHome }: WorkoutPagePr
 
   const finish = () => {
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    clearActiveSession();
     const durationSeconds = Math.floor((Date.now() - startTimeRef.current) / 1000);
     const workout: WorkoutLog = {
       id: Date.now().toString(),
@@ -218,6 +264,7 @@ export function WorkoutPage({ data, programId, onFinish, onHome }: WorkoutPagePr
     } else {
       // No progress, just leave
       timer.stop();
+      clearActiveSession();
       onHome?.();
     }
   };
@@ -228,6 +275,7 @@ export function WorkoutPage({ data, programId, onFinish, onHome }: WorkoutPagePr
 
   const handleDiscard = () => {
     timer.stop();
+    clearActiveSession();
     setShowExitDialog(false);
     onHome?.();
   };
@@ -292,7 +340,6 @@ export function WorkoutPage({ data, programId, onFinish, onHome }: WorkoutPagePr
             isBase={ex.isBase}
             onRemove={ex.isBase ? undefined : () => removeExercise(i)}
             isPR={prExercises.has(ex.exercise.id)}
-            
           />
         </div>
       ))}
