@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { SetLog } from '@/data/exercises';
 import { Minus, Plus, X, Trophy, Check } from 'lucide-react';
 import { ExerciseDemoModal } from '@/components/ExerciseDemoModal';
@@ -20,7 +20,6 @@ interface ExerciseCardProps {
   mediaUrl?: string;
 }
 
-const WEIGHT_PICKS = [2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32];
 const MAX_SETS = 10;
 
 export function ExerciseCard({
@@ -32,75 +31,24 @@ export function ExerciseCard({
   const [editingRepsSet, setEditingRepsSet] = useState<number | null>(null);
   // Inline weight editor (tap weight label)
   const [editingWeightSet, setEditingWeightSet] = useState<number | null>(null);
-  // Full edit modal (long press)
-  const [editingSet, setEditingSet] = useState<number | null>(null);
-  const [editReps, setEditReps] = useState(0);
-  const [editWeight, setEditWeight] = useState(0);
+  // AMRAP
   const [amrapSet, setAmrapSet] = useState<number | null>(null);
   const [amrapReps, setAmrapReps] = useState(0);
-
-  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const didLongPress = useRef(false);
 
   const isAmrap = (setIdx: number) => {
     return repRange.includes('+') && setIdx === currentSets.length - 1;
   };
 
-  // Long-press handling for set circles
-  const handlePointerDown = useCallback((i: number) => {
-    didLongPress.current = false;
-    longPressTimer.current = setTimeout(() => {
-      didLongPress.current = true;
-      if (i === currentSets.length - 1 && currentSets.length > 1 && onSetsCountChange) {
-        onSetsCountChange(currentSets.length - 1);
-      } else {
-        const set = currentSets[i];
-        setEditReps(set.reps || 5);
-        setEditWeight(set.weight || 5);
-        setEditingSet(i);
-      }
-    }, 500);
-  }, [currentSets, onSetsCountChange]);
-
-  const handlePointerUp = useCallback((i: number) => {
-    if (longPressTimer.current) {
-      clearTimeout(longPressTimer.current);
-      longPressTimer.current = null;
-    }
-    if (didLongPress.current) {
-      didLongPress.current = false;
-      return;
-    }
+  const handleCircleTap = useCallback((i: number) => {
     const set = currentSets[i];
     if (set.done) {
+      // Undo completion
       onSetDone(i);
       return;
     }
     setEditingRepsSet(editingRepsSet === i ? null : i);
     setEditingWeightSet(null);
   }, [currentSets, onSetDone, editingRepsSet]);
-
-  const handlePointerLeave = useCallback(() => {
-    if (longPressTimer.current) {
-      clearTimeout(longPressTimer.current);
-      longPressTimer.current = null;
-    }
-  }, []);
-
-  const confirmEditSet = () => {
-    if (editingSet !== null) {
-      onSetChange(editingSet, 'reps', editReps);
-      onSetChange(editingSet, 'weight', editWeight);
-      setEditingSet(null);
-    }
-  };
-
-  const resetEditSet = () => {
-    if (editingSet !== null) {
-      setEditReps(0);
-      setEditWeight(0);
-    }
-  };
 
   const confirmAmrap = () => {
     if (amrapSet !== null) {
@@ -161,9 +109,7 @@ export function ExerciseCard({
         {currentSets.map((set, i) => (
           <div key={i} className="flex flex-col items-center gap-1">
             <button
-              onPointerDown={() => handlePointerDown(i)}
-              onPointerUp={() => handlePointerUp(i)}
-              onPointerLeave={handlePointerLeave}
+              onClick={() => handleCircleTap(i)}
               className={cn(
                 'w-14 h-14 rounded-full flex items-center justify-center transition-all border-2 select-none touch-manipulation',
                 set.done
@@ -242,7 +188,7 @@ export function ExerciseCard({
         </div>
       )}
 
-      {/* Per-set weight editor */}
+      {/* Per-set weight editor — +/- only, no grid */}
       {editingWeightSet !== null && (
         <div className="bg-secondary rounded-lg p-3 space-y-3">
           <p className="text-xs text-muted-foreground font-semibold uppercase text-center">
@@ -265,52 +211,7 @@ export function ExerciseCard({
               <Plus size={18} />
             </button>
           </div>
-          <div className="grid grid-cols-8 gap-1">
-            {WEIGHT_PICKS.map(w => (
-              <button
-                key={w}
-                onClick={() => onSetChange(editingWeightSet, 'weight', w)}
-                className={cn(
-                  'py-1.5 rounded text-xs font-bold transition-colors',
-                  currentSets[editingWeightSet].weight === w
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-card text-foreground'
-                )}
-              >
-                {w}
-              </button>
-            ))}
-          </div>
           <button onClick={() => setEditingWeightSet(null)} className="w-full text-center text-xs text-muted-foreground py-1">Done</button>
-        </div>
-      )}
-
-      {/* Long-press Edit Modal */}
-      {editingSet !== null && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70" onClick={() => setEditingSet(null)}>
-          <div className="bg-card rounded-xl p-6 w-80 space-y-5" onClick={e => e.stopPropagation()}>
-            <h3 className="text-lg font-black text-foreground text-center">Edit Set {editingSet + 1}</h3>
-            <div className="space-y-2">
-              <p className="text-xs text-muted-foreground font-semibold uppercase text-center">Reps</p>
-              <div className="flex items-center justify-center gap-4">
-                <button onClick={() => setEditReps(Math.max(0, editReps - 1))} className="w-12 h-12 rounded-full bg-secondary text-foreground flex items-center justify-center"><Minus size={20} /></button>
-                <span className="text-4xl font-black text-foreground tabular-nums min-w-[60px] text-center">{editReps || '—'}</span>
-                <button onClick={() => setEditReps(editReps + 1)} className="w-12 h-12 rounded-full bg-secondary text-foreground flex items-center justify-center"><Plus size={20} /></button>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <p className="text-xs text-muted-foreground font-semibold uppercase text-center">Weight</p>
-              <div className="flex items-center justify-center gap-4">
-                <button onClick={() => setEditWeight(Math.max(0, editWeight - 2))} className="w-12 h-12 rounded-full bg-secondary text-foreground flex items-center justify-center"><Minus size={20} /></button>
-                <span className="text-3xl font-black text-foreground tabular-nums min-w-[70px] text-center">{editWeight}<span className="text-sm text-muted-foreground ml-1">kg</span></span>
-                <button onClick={() => setEditWeight(Math.min(200, editWeight + 2))} className="w-12 h-12 rounded-full bg-secondary text-foreground flex items-center justify-center"><Plus size={20} /></button>
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <button onClick={resetEditSet} className="flex-1 bg-secondary text-muted-foreground font-bold py-3 rounded-lg text-sm">Reset</button>
-              <button onClick={confirmEditSet} className="flex-1 bg-primary text-primary-foreground font-bold py-3 rounded-lg text-lg">OK</button>
-            </div>
-          </div>
         </div>
       )}
 
