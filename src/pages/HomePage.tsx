@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { AppData, Program, DAY_NAMES, DAY_ORDER, PROGRAM_DAY_ORDERS } from '@/data/exercises';
-import { Dumbbell, ChevronRight, Download, Share2, Play, Lock, RotateCcw, Grip, Activity } from 'lucide-react';
+import { Dumbbell, ChevronRight, Download, Share2, Play, Lock, RotateCcw, Grip, Activity, Heart } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 interface BeforeInstallPromptEvent extends Event {
@@ -62,8 +62,9 @@ export function HomePage({ data, onStartWorkout, onSelectProgram, onContinueLast
 
   const activeProgram = data.programs.find(p => p.isActive);
 
-  const mainPrograms = data.programs.filter(p => p.category !== 'complementary');
+  const mainPrograms = data.programs.filter(p => p.category === 'main');
   const complementaryPrograms = data.programs.filter(p => p.category === 'complementary');
+  const longevityPrograms = data.programs.filter(p => p.category === 'longevity');
 
   return (
     <div className="px-4 pt-10 pb-24 max-w-md mx-auto space-y-6">
@@ -95,6 +96,27 @@ export function HomePage({ data, onStartWorkout, onSelectProgram, onContinueLast
           );
         })}
       </div>
+
+      {/* Longevity & Health */}
+      {longevityPrograms.length > 0 && (
+        <div className="space-y-3">
+          <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">
+            Longevity & Health
+          </p>
+          {longevityPrograms.map((program) => {
+            const nextDayLabel = program.workoutDays[data.nextDayIndex % program.workoutDays.length];
+            return (
+              <ProgramCard
+                key={program.id}
+                program={program}
+                nextDayLabel={nextDayLabel}
+                onStart={() => onSelectProgram(program.id)}
+                icon={<Heart size={18} className="text-primary" />}
+              />
+            );
+          })}
+        </div>
+      )}
 
       {/* Complementary */}
       <div className="space-y-3">
@@ -159,10 +181,12 @@ function ProgramCard({
   program,
   nextDayLabel,
   onStart,
+  icon,
 }: {
   program: Program;
   nextDayLabel: string;
   onStart: () => void;
+  icon?: React.ReactNode;
 }) {
   const isActive = program.isActive;
   const isLocked = !!program.comingSoon;
@@ -179,7 +203,7 @@ function ProgramCard({
     >
       <div className="space-y-1.5">
         <div className="flex items-center gap-2">
-          {getEquipmentIcon(program.equipment)}
+          {icon || getEquipmentIcon(program.equipment)}
           <h3 className="text-base font-bold text-foreground truncate">
             {program.name}
           </h3>
