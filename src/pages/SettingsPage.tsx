@@ -1,8 +1,9 @@
-import { AppSettings, AppData } from '@/data/exercises';
+import { AppSettings, AppData, BASE_EXERCISES } from '@/data/exercises';
 import { Download, Upload } from 'lucide-react';
-import { useRef } from 'react';
+import { useRef, useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import { getLastSaved } from '@/lib/storage';
+import { getDemoType } from '@/data/exerciseDemos';
 
 interface SettingsPageProps {
   settings: AppSettings;
@@ -35,6 +36,14 @@ function Toggle({ label, checked, onChange }: { label: string; checked: boolean;
 
 export function SettingsPage({ settings, hydrated, workoutsCount, onUpdateSettings, onExport, onImport }: SettingsPageProps) {
   const fileRef = useRef<HTMLInputElement>(null);
+
+  const demoStats = useMemo(() => {
+    const total = BASE_EXERCISES.length;
+    const uniqueNames = new Set(BASE_EXERCISES.map(e => e.name));
+    const withDemo = Array.from(uniqueNames).filter(n => getDemoType(n) !== 'generic').length;
+    const missing = Array.from(uniqueNames).filter(n => getDemoType(n) === 'generic');
+    return { total, unique: uniqueNames.size, withDemo, missing };
+  }, []);
 
   const handleExport = () => {
     const json = onExport();
@@ -116,6 +125,35 @@ export function SettingsPage({ settings, hydrated, workoutsCount, onUpdateSettin
           <span className="text-muted-foreground">Last saved</span>
           <span className="text-foreground font-mono text-xs">{getLastSaved() || 'never'}</span>
         </div>
+      </div>
+
+      {/* Demo Status */}
+      <div className="bg-card rounded-xl p-4 space-y-2">
+        <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Demo Status</p>
+        <div className="flex justify-between text-sm">
+          <span className="text-muted-foreground">Total exercises</span>
+          <span className="text-foreground font-mono">{demoStats.total}</span>
+        </div>
+        <div className="flex justify-between text-sm">
+          <span className="text-muted-foreground">Unique exercises</span>
+          <span className="text-foreground font-mono">{demoStats.unique}</span>
+        </div>
+        <div className="flex justify-between text-sm">
+          <span className="text-muted-foreground">Demos available</span>
+          <span className="text-foreground font-mono text-primary">{demoStats.withDemo}</span>
+        </div>
+        <div className="flex justify-between text-sm">
+          <span className="text-muted-foreground">Generic placeholder</span>
+          <span className="text-foreground font-mono">{demoStats.missing.length}</span>
+        </div>
+        {demoStats.missing.length > 0 && (
+          <div className="pt-1">
+            <p className="text-xs text-muted-foreground mb-1">Missing specific demos:</p>
+            <div className="text-xs text-muted-foreground/70 space-y-0.5">
+              {demoStats.missing.map(n => <p key={n}>• {n}</p>)}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

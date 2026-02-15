@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback } from 'react';
 import { SetLog, EXERCISE_EQUIVALENTS } from '@/data/exercises';
-import { Minus, Plus, X, RefreshCw, Trophy, Image, Check, Undo2 } from 'lucide-react';
+import { Minus, Plus, X, RefreshCw, Trophy, Play, Check, Undo2 } from 'lucide-react';
+import { ExerciseDemoModal } from '@/components/ExerciseDemoModal';
 import { cn } from '@/lib/utils';
 
 interface ExerciseCardProps {
@@ -31,6 +32,7 @@ export function ExerciseCard({
 }: ExerciseCardProps) {
   const [showSwap, setShowSwap] = useState(false);
   const [showMedia, setShowMedia] = useState(false);
+  const [showDemo, setShowDemo] = useState(false);
   // Inline reps editor (tap circle)
   const [editingRepsSet, setEditingRepsSet] = useState<number | null>(null);
   // Inline weight editor (tap weight label)
@@ -161,8 +163,8 @@ export function ExerciseCard({
         <div className="flex-1">
           <div className="flex items-center gap-2">
             <h3
-              className={cn("font-bold text-foreground text-base", mediaUrl && "active:text-primary cursor-pointer")}
-              onClick={() => { if (mediaUrl) setShowMedia(!showMedia); }}
+              className="font-bold text-foreground text-base active:text-primary cursor-pointer"
+              onClick={() => setShowDemo(true)}
             >
               {name}
             </h3>
@@ -176,11 +178,9 @@ export function ExerciseCard({
           <p className="text-sm text-muted-foreground">{currentSets.length} × {repRange}</p>
         </div>
         <div className="flex items-center gap-1">
-          {mediaUrl && (
-            <button onClick={() => setShowMedia(!showMedia)} className="text-muted-foreground p-1">
-              <Image size={16} />
-            </button>
-          )}
+          <button onClick={() => setShowDemo(true)} className="text-primary/60 p-1 active:text-primary">
+            <Play size={16} />
+          </button>
           {equivalents.length > 0 && onSwap && (
             <button onClick={() => setShowSwap(!showSwap)} className="text-muted-foreground p-1">
               <RefreshCw size={16} />
@@ -469,6 +469,11 @@ export function ExerciseCard({
         <p className="text-xs text-muted-foreground text-center">
           Last: {lastSession.map((s, i) => `${s.weight}kg×${s.reps}`).join(' · ')}
         </p>
+      )}
+
+      {/* Demo Modal */}
+      {showDemo && (
+        <ExerciseDemoModal exerciseName={name} onClose={() => setShowDemo(false)} />
       )}
     </div>
   );
