@@ -369,6 +369,43 @@ const CUES_MAP: Record<string, ExerciseCueEntry> = {
     cues: ['Stand sideways to cable', 'Press hands straight out', 'Resist rotation', 'Hold 2–3s extended'],
     mistakes: ['Rotating toward cable', 'Using too much weight'],
   },
+  // ─── BLUEPRINT LONGEVITY ───
+  'push-ups or db floor press': {
+    cues: ['Choose push-ups (bodyweight) or DB floor press', 'Keep core tight throughout', 'Full range of motion', 'Control the eccentric'],
+    mistakes: ['Sagging hips on push-ups', 'Bouncing off floor on presses'],
+  },
+  'db romanian deadlift': {
+    cues: ['Soft knee bend, hinge at hips', 'DBs slide along thighs', 'Feel hamstring stretch', 'Drive hips forward to stand'],
+    mistakes: ['Rounding lower back', 'Bending knees too much'],
+  },
+  'one-arm db row': {
+    cues: ['Flat back, core braced', 'Pull elbow toward hip', 'Squeeze shoulder blade at top', 'Full stretch at bottom'],
+    mistakes: ['Rotating torso', 'Pulling with bicep only'],
+  },
+  'db overhead press': {
+    cues: ['Core braced, ribs down', 'Press straight overhead', 'Full lockout at top', 'Lower to ear level with control'],
+    mistakes: ['Excessive back arch', 'Using leg drive'],
+  },
+  'plank or side plank': {
+    cues: ['Choose front plank or side plank', 'Body straight from head to heels', 'Engage glutes and core', 'Breathe steadily throughout'],
+    mistakes: ['Hips sagging or piking', 'Holding breath'],
+  },
+  'bird dog or dead bug': {
+    cues: ['Choose bird dog (all fours) or dead bug (supine)', 'Opposite arm and leg extend', 'Keep hips and spine stable', 'Move slowly and controlled'],
+    mistakes: ['Rotating hips', 'Arching lower back'],
+  },
+  'single-leg rdl or balance': {
+    cues: ['Soft knee on standing leg', 'Hinge forward or hold balance', 'Keep hips square', 'Return with control'],
+    mistakes: ['Opening hips to the side', 'Rounding back'],
+  },
+  'thoracic rotation': {
+    cues: ['All fours or seated position', 'Hand behind head, rotate toward ceiling', 'Follow hand with eyes', 'Controlled return'],
+    mistakes: ['Rotating from lower back', 'Rushing the movement'],
+  },
+  'hamstring / ankle stretch': {
+    cues: ['Straight leg stretch for hamstrings', 'Wall or step stretch for ankles', 'Hold steady, breathe deeply', 'No bouncing'],
+    mistakes: ['Rounding back to reach toes', 'Holding breath'],
+  },
 };
 
 export function getExerciseCues(exerciseName: string): ExerciseCueEntry {

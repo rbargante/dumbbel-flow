@@ -1,4 +1,4 @@
-export type WorkoutDay = 'push' | 'pull' | 'legs' | 'full_body' | 'pelvic_reset' | 'posture' | 'balance' | 'mobility_core' | 'strength_maint' | 'cardio_capacity' | 'balance_stability';
+export type WorkoutDay = 'push' | 'pull' | 'legs' | 'full_body' | 'pelvic_reset' | 'posture' | 'balance' | 'mobility_core' | 'strength_maint' | 'cardio_capacity' | 'balance_stability' | 'blueprint_longevity';
 
 export const DAY_NAMES: Record<WorkoutDay, string> = {
   push: 'Push Day',
@@ -12,6 +12,7 @@ export const DAY_NAMES: Record<WorkoutDay, string> = {
   strength_maint: 'Strength Maintenance',
   cardio_capacity: 'Cardio & Capacity',
   balance_stability: 'Balance & Stability',
+  blueprint_longevity: 'Blueprint Longevity',
 };
 
 export const DAY_ORDER: WorkoutDay[] = ['push', 'pull', 'legs'];
@@ -27,6 +28,7 @@ export const PROGRAM_DAY_ORDERS: Record<string, WorkoutDay[]> = {
   posture_routine: ['posture'],
   balance_longevity: ['balance'],
   longevity_protocol: ['mobility_core', 'strength_maint', 'cardio_capacity', 'balance_stability'],
+  blueprint_longevity: ['blueprint_longevity'],
 };
 
 export interface Exercise {
@@ -142,6 +144,16 @@ export const DEFAULT_PROGRAMS: Program[] = [
     isActive: false,
     equipment: ['Full Home Gym'],
     workoutDays: ['Full Body'],
+    rotationIndex: 0,
+    category: 'main',
+  },
+  {
+    id: 'blueprint_longevity',
+    name: 'Blueprint Longevity',
+    type: 'full_body',
+    isActive: false,
+    equipment: ['Dumbbells', 'Bench', 'Bodyweight'],
+    workoutDays: ['Blueprint Longevity'],
     rotationIndex: 0,
     category: 'main',
   },
@@ -297,6 +309,19 @@ export const BASE_EXERCISES: Exercise[] = [
   { id: 'im_fb8', name: 'Dumbbell / EZ Bar Curl', sets: 4, repRange: '10–12', isCompound: false, day: 'full_body', programId: 'full_body_ironmaster' },
   { id: 'im_fb9', name: 'Cable Triceps Pushdown', sets: 4, repRange: '10–12', isCompound: false, day: 'full_body', programId: 'full_body_ironmaster' },
   { id: 'im_fb10', name: 'Standing Calf Raise', sets: 4, repRange: '12–15', isCompound: false, day: 'full_body', programId: 'full_body_ironmaster' },
+
+  // ─── BLUEPRINT LONGEVITY (Bryan Johnson — Home) ───
+  { id: 'bp1', name: 'Goblet Squat', sets: 3, repRange: '10–15', isCompound: true, day: 'blueprint_longevity', programId: 'blueprint_longevity' },
+  { id: 'bp2', name: 'Push-Ups or DB Floor Press', sets: 3, repRange: '8–15', isCompound: true, day: 'blueprint_longevity', programId: 'blueprint_longevity' },
+  { id: 'bp3', name: 'DB Romanian Deadlift', sets: 3, repRange: '10–12', isCompound: true, day: 'blueprint_longevity', programId: 'blueprint_longevity' },
+  { id: 'bp4', name: 'One-Arm DB Row', sets: 3, repRange: '10–12 each', isCompound: true, day: 'blueprint_longevity', programId: 'blueprint_longevity' },
+  { id: 'bp5', name: 'DB Overhead Press', sets: 3, repRange: '8–12', isCompound: true, day: 'blueprint_longevity', programId: 'blueprint_longevity' },
+  { id: 'bp6', name: 'Plank or Side Plank', sets: 2, repRange: '30–60s', isCompound: false, day: 'blueprint_longevity', programId: 'blueprint_longevity' },
+  { id: 'bp7', name: 'Bird Dog or Dead Bug', sets: 2, repRange: '10 each side', isCompound: false, day: 'blueprint_longevity', programId: 'blueprint_longevity' },
+  { id: 'bp8', name: 'Single-Leg RDL or Balance', sets: 2, repRange: '8–10 each', isCompound: true, day: 'blueprint_longevity', programId: 'blueprint_longevity' },
+  { id: 'bp9', name: 'Hip Flexor Stretch', sets: 1, repRange: '30s each side', isCompound: false, day: 'blueprint_longevity', programId: 'blueprint_longevity' },
+  { id: 'bp10', name: 'Thoracic Rotation', sets: 1, repRange: '10 each side', isCompound: false, day: 'blueprint_longevity', programId: 'blueprint_longevity' },
+  { id: 'bp11', name: 'Hamstring / Ankle Stretch', sets: 1, repRange: '30s each side', isCompound: false, day: 'blueprint_longevity', programId: 'blueprint_longevity' },
 
   // ─── COMPLEMENTARY: PELVIC RESET ───
   { id: 'c_pr1', name: 'Posterior Pelvic Tilt Hold', sets: 3, repRange: '30s hold', isCompound: false, day: 'pelvic_reset', programId: 'pelvic_reset' },
