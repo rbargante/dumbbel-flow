@@ -461,7 +461,7 @@ export const DEFAULT_APP_DATA: AppData = {
   settings: {
     restTimerEnabled: true,
     soundEnabled: true,
-    requirePelvicReset: true,
+    requirePelvicReset: false,
   },
   programs: DEFAULT_PROGRAMS,
 };
