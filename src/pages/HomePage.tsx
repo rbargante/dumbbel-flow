@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { AppData, Program, DAY_NAMES, DAY_ORDER } from '@/data/exercises';
+import { AppData, Program, DAY_NAMES, DAY_ORDER, PROGRAM_DAY_ORDERS } from '@/data/exercises';
 import { Dumbbell, ChevronRight, Download, Share2, Play, Lock, RotateCcw, Grip, Activity } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
@@ -19,7 +19,7 @@ interface HomePageProps {
 function getEquipmentIcon(equipment: string[]) {
   const first = equipment[0]?.toLowerCase() || '';
   if (first.includes('ez')) return <Grip size={18} className="text-primary" />;
-  if (first.includes('ironmaster')) return <Dumbbell size={18} className="text-primary" />;
+  if (first.includes('full home') || first.includes('ironmaster')) return <Dumbbell size={18} className="text-primary" />;
   if (first.includes('bodyweight')) return <Activity size={18} className="text-primary" />;
   return <Dumbbell size={18} className="text-primary" />;
 }
@@ -61,9 +61,6 @@ export function HomePage({ data, onStartWorkout, onSelectProgram, onContinueLast
   };
 
   const activeProgram = data.programs.find(p => p.isActive);
-  const nextDayLabel = activeProgram
-    ? activeProgram.workoutDays[data.nextDayIndex % activeProgram.workoutDays.length]
-    : '';
 
   const mainPrograms = data.programs.filter(p => p.category !== 'complementary');
   const complementaryPrograms = data.programs.filter(p => p.category === 'complementary');
@@ -83,18 +80,20 @@ export function HomePage({ data, onStartWorkout, onSelectProgram, onContinueLast
         <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">
           Main Workouts
         </p>
-        {mainPrograms.map((program) => (
-          <ProgramCard
-            key={program.id}
-            program={program}
-            nextDayLabel={
-              program.isActive ? nextDayLabel : program.workoutDays[0]
-            }
-            onStart={() => {
-              if (program.isActive) onSelectProgram(program.id);
-            }}
-          />
-        ))}
+        {mainPrograms.map((program) => {
+          const dayOrder = PROGRAM_DAY_ORDERS[program.id] || ['push'];
+          const nextDayLabel = program.isActive
+            ? program.workoutDays[data.nextDayIndex % program.workoutDays.length]
+            : program.workoutDays[0];
+          return (
+            <ProgramCard
+              key={program.id}
+              program={program}
+              nextDayLabel={nextDayLabel}
+              onStart={() => onSelectProgram(program.id)}
+            />
+          );
+        })}
       </div>
 
       {/* Complementary */}
@@ -107,16 +106,13 @@ export function HomePage({ data, onStartWorkout, onSelectProgram, onContinueLast
             key={program.id}
             program={program}
             nextDayLabel={program.workoutDays[0]}
-            onStart={() => {
-              if (!program.comingSoon) onSelectProgram(program.id);
-            }}
+            onStart={() => onSelectProgram(program.id)}
           />
         ))}
       </div>
 
       {/* Quick Actions */}
       <div className="space-y-3">
-        {/* Continue Last Workout */}
         {hasActiveSession && onContinueLastWorkout && (
           <button
             onClick={onContinueLastWorkout}
@@ -126,7 +122,6 @@ export function HomePage({ data, onStartWorkout, onSelectProgram, onContinueLast
           </button>
         )}
 
-        {/* Install & Share */}
         <div className="flex gap-3">
           {installPrompt && !installed ? (
             <button
@@ -182,7 +177,6 @@ function ProgramCard({
           : 'border border-secondary'
       }`}
     >
-      {/* Top row */}
       <div className="space-y-1.5">
         <div className="flex items-center gap-2">
           {getEquipmentIcon(program.equipment)}
@@ -200,7 +194,6 @@ function ProgramCard({
             </span>
           )}
         </div>
-        {/* Equipment tags */}
         <div className="flex gap-1.5 flex-wrap ml-[26px]">
           {program.equipment.map(eq => (
             <span key={eq} className="text-[10px] bg-secondary text-muted-foreground px-2 py-0.5 rounded-md">
@@ -210,7 +203,6 @@ function ProgramCard({
         </div>
       </div>
 
-      {/* Next workout & Start */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <ChevronRight size={14} className="text-primary" />
@@ -219,16 +211,16 @@ function ProgramCard({
           </span>
         </div>
 
-        {isActive && !isLocked ? (
+        {!isLocked ? (
           <button
             onClick={(e) => { e.stopPropagation(); onStart(); }}
             className="flex items-center gap-1.5 bg-primary text-primary-foreground font-bold text-sm px-5 py-2.5 rounded-lg active:scale-[0.97] transition-transform"
           >
             <Play size={14} fill="currentColor" /> START
           </button>
-        ) : isLocked ? (
+        ) : (
           <Lock size={18} className="text-muted-foreground" />
-        ) : null}
+        )}
       </div>
     </div>
   );

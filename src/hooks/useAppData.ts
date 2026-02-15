@@ -40,11 +40,16 @@ export function useAppData() {
           newLastSession[ex.exerciseId] = doneSets;
         }
       });
+      // Only advance rotation for the active program
+      const activeProgram = prev.programs.find(p => p.isActive);
+      const isActiveProgram = workout.programId === activeProgram?.id;
       const next: AppData = {
         ...prev,
         workouts: [workout, ...prev.workouts],
         lastSessionByExercise: newLastSession,
-        nextDayIndex: (prev.nextDayIndex + 1) % getDayCount(prev),
+        nextDayIndex: isActiveProgram
+          ? (prev.nextDayIndex + 1) % getDayCount(prev)
+          : prev.nextDayIndex,
       };
       saveState(next);
       return next;

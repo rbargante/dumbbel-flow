@@ -16,10 +16,14 @@ const Index = () => {
   const [screen, setScreen] = useState<Screen>('home');
   const [activeTab, setActiveTab] = useState<'home' | 'history' | 'settings'>('home');
   const [overrideDayIndex, setOverrideDayIndex] = useState<number | null>(null);
+  const [selectedProgramId, setSelectedProgramId] = useState<string | null>(null);
 
   const activeProgram = appData.data.programs.find(p => p.isActive);
   const activeProgramId = activeProgram?.id || 'ppl_dumbbell';
-  const dayOrder = PROGRAM_DAY_ORDERS[activeProgramId] || DAY_ORDER;
+
+  // Use selected program for workout flow, fallback to active
+  const workoutProgramId = selectedProgramId || activeProgramId;
+  const workoutProgram = appData.data.programs.find(p => p.id === workoutProgramId);
 
   const navigate = (s: Screen) => {
     setScreen(s);
@@ -39,13 +43,15 @@ const Index = () => {
 
   const handleSelectProgram = (programId: string) => {
     const program = appData.data.programs.find(p => p.id === programId);
-    if (program?.isActive) {
+    if (program && !program.comingSoon) {
+      setSelectedProgramId(programId);
       navigate('workout-select');
     }
   };
 
   const handleFinishWorkout = () => {
     setOverrideDayIndex(null);
+    setSelectedProgramId(null);
     navigate('home');
   };
 
@@ -62,12 +68,12 @@ const Index = () => {
       )}
       {screen === 'workout-select' && (
         <WorkoutSelectPage
-          programId={activeProgramId}
-          programName={activeProgram?.name ?? 'Workout'}
+          programId={workoutProgramId}
+          programName={workoutProgram?.name ?? 'Workout'}
           nextDayIndex={appData.data.nextDayIndex}
           onSelectDay={(dayIndex) => startWorkoutFlow(dayIndex)}
           onStartNext={() => startWorkoutFlow()}
-          onBack={() => navigate('home')}
+          onBack={() => { setSelectedProgramId(null); navigate('home'); }}
         />
       )}
       {screen === 'pelvic-reset' && (
@@ -79,7 +85,9 @@ const Index = () => {
       {screen === 'workout' && (
         <WorkoutPage
           data={{ ...appData.data, nextDayIndex: effectiveDayIndex }}
+          programId={workoutProgramId}
           onFinish={(workout) => { appData.saveWorkout(workout); handleFinishWorkout(); }}
+          onHome={handleFinishWorkout}
         />
       )}
       {screen === 'history' && <HistoryPage workouts={appData.data.workouts} />}
