@@ -1,8 +1,7 @@
-import { useState, useRef, useCallback, useMemo, useEffect } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { SetLog } from '@/data/exercises';
-import { Minus, Plus, X, Trophy, Play, Check } from 'lucide-react';
+import { Minus, Plus, X, Trophy, Check } from 'lucide-react';
 import { ExerciseDemoModal } from '@/components/ExerciseDemoModal';
-import { isDemoCached } from '@/lib/demoCache';
 import { cn } from '@/lib/utils';
 
 interface ExerciseCardProps {
@@ -28,13 +27,6 @@ export function ExerciseCard({
   name, exerciseId, setsCount, repRange, lastSession, currentSets, onSetChange, onSetDone, onSetsCountChange, isBase, onRemove, isPR, mediaUrl,
 }: ExerciseCardProps) {
   const [showDemo, setShowDemo] = useState(false);
-  // Always allow opening demo - it will fetch on open or show fallback
-  const [hasCachedDemo, setHasCachedDemo] = useState(false);
-
-  // Check if demo is cached (for showing play icon proactively)
-  useEffect(() => {
-    isDemoCached(name).then(setHasCachedDemo);
-  }, [name]);
 
   // Inline reps editor (tap circle)
   const [editingRepsSet, setEditingRepsSet] = useState<number | null>(null);
@@ -156,9 +148,6 @@ export function ExerciseCard({
           <p className="text-sm text-muted-foreground">{currentSets.length} × {repRange}</p>
         </div>
         <div className="flex items-center gap-1">
-          <button onClick={() => setShowDemo(true)} className="text-primary/60 p-1 active:text-primary">
-            <Play size={16} />
-          </button>
           {!isBase && onRemove && (
             <button onClick={onRemove} className="text-muted-foreground p-1">
               <X size={18} />
