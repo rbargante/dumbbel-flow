@@ -2,11 +2,7 @@ import { useState, useEffect } from 'react';
 import { AppData, Program, DAY_NAMES, DAY_ORDER, PROGRAM_DAY_ORDERS } from '@/data/exercises';
 import { Dumbbell, ChevronRight, Download, Share2, Play, Lock, RotateCcw, Grip, Activity, Heart } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-
-interface BeforeInstallPromptEvent extends Event {
-  prompt(): Promise<void>;
-  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
-}
+import { useInstallPrompt } from '@/hooks/useInstallPrompt';
 
 interface HomePageProps {
   data: AppData;
@@ -25,26 +21,7 @@ function getEquipmentIcon(equipment: string[]) {
 }
 
 export function HomePage({ data, onStartWorkout, onSelectProgram, onContinueLastWorkout, hasActiveSession }: HomePageProps) {
-  const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
-  const [installed, setInstalled] = useState(false);
-
-  useEffect(() => {
-    const handler = (e: Event) => {
-      e.preventDefault();
-      setInstallPrompt(e as BeforeInstallPromptEvent);
-    };
-    window.addEventListener('beforeinstallprompt', handler);
-    window.addEventListener('appinstalled', () => setInstalled(true));
-    return () => window.removeEventListener('beforeinstallprompt', handler);
-  }, []);
-
-  const handleInstall = async () => {
-    if (!installPrompt) return;
-    await installPrompt.prompt();
-    const { outcome } = await installPrompt.userChoice;
-    if (outcome === 'accepted') setInstalled(true);
-    setInstallPrompt(null);
-  };
+  const { installPrompt, isInstalled, promptInstall } = useInstallPrompt();
 
   const handleShare = async () => {
     const shareData = {
@@ -145,21 +122,21 @@ export function HomePage({ data, onStartWorkout, onSelectProgram, onContinueLast
         )}
 
         <div className="flex gap-3">
-          {installPrompt && !installed ? (
+          {installPrompt && !isInstalled ? (
             <button
-              onClick={handleInstall}
+              onClick={promptInstall}
               className="flex-1 flex items-center justify-center gap-2 bg-primary text-primary-foreground font-bold py-3 rounded-xl active:scale-[0.98] transition-transform"
             >
               <Download size={18} /> Install App
             </button>
-          ) : installed ? (
+          ) : isInstalled ? (
             <div className="flex-1 flex items-center justify-center gap-2 bg-card text-muted-foreground font-bold py-3 rounded-xl">
               <Download size={18} /> Installed
             </div>
           ) : null}
           <button
             onClick={handleShare}
-            className={`${installPrompt || installed ? 'flex-1' : 'w-full'} flex items-center justify-center gap-2 bg-card text-foreground font-bold py-3 rounded-xl active:scale-[0.98] transition-transform border border-secondary`}
+            className={`${installPrompt || isInstalled ? 'flex-1' : 'w-full'} flex items-center justify-center gap-2 bg-card text-foreground font-bold py-3 rounded-xl active:scale-[0.98] transition-transform border border-secondary`}
           >
             <Share2 size={18} /> Share
           </button>
