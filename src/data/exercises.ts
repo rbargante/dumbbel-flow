@@ -1,4 +1,4 @@
-export type WorkoutDay = 'push' | 'pull' | 'legs' | 'full_body' | 'pelvic_reset' | 'posture' | 'balance';
+export type WorkoutDay = 'push' | 'pull' | 'legs' | 'full_body' | 'pelvic_reset' | 'posture' | 'balance' | 'mobility_core' | 'strength_maint' | 'cardio_capacity' | 'balance_stability';
 
 export const DAY_NAMES: Record<WorkoutDay, string> = {
   push: 'Push Day',
@@ -8,6 +8,10 @@ export const DAY_NAMES: Record<WorkoutDay, string> = {
   pelvic_reset: 'Pelvic Reset',
   posture: 'Posture',
   balance: 'Balance & Longevity',
+  mobility_core: 'Daily Mobility & Core',
+  strength_maint: 'Strength Maintenance',
+  cardio_capacity: 'Cardio & Capacity',
+  balance_stability: 'Balance & Stability',
 };
 
 export const DAY_ORDER: WorkoutDay[] = ['push', 'pull', 'legs'];
@@ -22,6 +26,7 @@ export const PROGRAM_DAY_ORDERS: Record<string, WorkoutDay[]> = {
   pelvic_reset: ['pelvic_reset'],
   posture_routine: ['posture'],
   balance_longevity: ['balance'],
+  longevity_protocol: ['mobility_core', 'strength_maint', 'cardio_capacity', 'balance_stability'],
 };
 
 export interface Exercise {
@@ -75,7 +80,7 @@ export interface Program {
   workoutDays: string[];
   rotationIndex: number;
   comingSoon?: boolean;
-  category?: 'main' | 'complementary';
+  category?: 'main' | 'complementary' | 'longevity';
 }
 
 export const DEFAULT_PROGRAMS: Program[] = [
@@ -170,6 +175,17 @@ export const DEFAULT_PROGRAMS: Program[] = [
     workoutDays: ['Balance'],
     rotationIndex: 0,
     category: 'complementary',
+  },
+  // ─── Longevity ───
+  {
+    id: 'longevity_protocol',
+    name: 'Longevity Protocol',
+    type: 'full_body',
+    isActive: false,
+    equipment: ['Bodyweight', 'Dumbbells', 'Cable', 'Bench'],
+    workoutDays: ['Mobility & Core', 'Strength', 'Cardio', 'Balance'],
+    rotationIndex: 0,
+    category: 'longevity',
   },
 ];
 
@@ -297,6 +313,37 @@ export const BASE_EXERCISES: Exercise[] = [
   { id: 'c_bal2', name: 'Step-Back Lunge', sets: 3, repRange: '10 each', isCompound: true, day: 'balance', programId: 'balance_longevity' },
   { id: 'c_bal3', name: 'Slow Calf Raises', sets: 3, repRange: '15–20', isCompound: false, day: 'balance', programId: 'balance_longevity' },
   { id: 'c_bal4', name: 'Farmer Carry', sets: 3, repRange: '30s', isCompound: true, day: 'balance', programId: 'balance_longevity' },
+
+  // ─── LONGEVITY PROTOCOL ───
+  // Module 1: Daily Mobility & Core
+  { id: 'lp_mc1', name: 'Pelvic Tilt (Posterior)', sets: 2, repRange: '10–12', isCompound: false, day: 'mobility_core', programId: 'longevity_protocol' },
+  { id: 'lp_mc2', name: 'Dead Bug', sets: 2, repRange: '8 each side', isCompound: false, day: 'mobility_core', programId: 'longevity_protocol' },
+  { id: 'lp_mc3', name: 'Bird Dog', sets: 2, repRange: '8 each side', isCompound: false, day: 'mobility_core', programId: 'longevity_protocol' },
+  { id: 'lp_mc4', name: 'Cat–Cow Spinal Mobility', sets: 2, repRange: '10 cycles', isCompound: false, day: 'mobility_core', programId: 'longevity_protocol' },
+  { id: 'lp_mc5', name: 'Hip Flexor Stretch', sets: 2, repRange: '30s each', isCompound: false, day: 'mobility_core', programId: 'longevity_protocol' },
+  { id: 'lp_mc6', name: 'Thoracic Extension on Bench', sets: 2, repRange: '10–12', isCompound: false, day: 'mobility_core', programId: 'longevity_protocol' },
+  { id: 'lp_mc7', name: 'Glute Bridge Hold', sets: 2, repRange: '30s hold', isCompound: false, day: 'mobility_core', programId: 'longevity_protocol' },
+
+  // Module 2: Strength Maintenance
+  { id: 'lp_sm1', name: 'Goblet Squat', sets: 3, repRange: '8–10', isCompound: true, day: 'strength_maint', programId: 'longevity_protocol' },
+  { id: 'lp_sm2', name: 'Dumbbell Romanian Deadlift', sets: 3, repRange: '8–10', isCompound: true, day: 'strength_maint', programId: 'longevity_protocol' },
+  { id: 'lp_sm3', name: 'Incline Dumbbell Press', sets: 3, repRange: '8–10', isCompound: true, day: 'strength_maint', programId: 'longevity_protocol' },
+  { id: 'lp_sm4', name: 'One-Arm Dumbbell Row', sets: 3, repRange: '8–10', isCompound: true, day: 'strength_maint', programId: 'longevity_protocol' },
+  { id: 'lp_sm5', name: 'Cable Face Pull', sets: 3, repRange: '12–15', isCompound: false, day: 'strength_maint', programId: 'longevity_protocol' },
+  { id: 'lp_sm6', name: 'Standing Dumbbell Overhead Press', sets: 3, repRange: '8–10', isCompound: true, day: 'strength_maint', programId: 'longevity_protocol' },
+
+  // Module 3: Cardio & Capacity
+  { id: 'lp_cc1', name: 'Brisk Walking / March in Place', sets: 2, repRange: '5 min', isCompound: false, day: 'cardio_capacity', programId: 'longevity_protocol' },
+  { id: 'lp_cc2', name: 'Step-Ups on Bench', sets: 3, repRange: '10 each', isCompound: true, day: 'cardio_capacity', programId: 'longevity_protocol' },
+  { id: 'lp_cc3', name: 'Farmer Carry', sets: 3, repRange: '30–45s', isCompound: true, day: 'cardio_capacity', programId: 'longevity_protocol' },
+  { id: 'lp_cc4', name: 'Light Intervals (optional)', sets: 2, repRange: '30s on / 30s off', isCompound: false, day: 'cardio_capacity', programId: 'longevity_protocol' },
+
+  // Module 4: Balance & Stability
+  { id: 'lp_bs1', name: 'Single-Leg Stand', sets: 2, repRange: '30s each', isCompound: false, day: 'balance_stability', programId: 'longevity_protocol' },
+  { id: 'lp_bs2', name: 'Single-Leg Romanian Deadlift (light)', sets: 2, repRange: '8 each', isCompound: true, day: 'balance_stability', programId: 'longevity_protocol' },
+  { id: 'lp_bs3', name: 'Heel-to-Toe Walk', sets: 2, repRange: '20 steps', isCompound: false, day: 'balance_stability', programId: 'longevity_protocol' },
+  { id: 'lp_bs4', name: 'Side Plank', sets: 2, repRange: '20–30s each', isCompound: false, day: 'balance_stability', programId: 'longevity_protocol' },
+  { id: 'lp_bs5', name: 'Front Plank', sets: 2, repRange: '30–45s', isCompound: false, day: 'balance_stability', programId: 'longevity_protocol' },
 ];
 
 // ═══════════════════════════════════════════
@@ -362,6 +409,22 @@ export const EXTRA_EXERCISES: Record<string, { id: string; name: string; default
   full_body_ironmaster_full_body: [
     { id: 'extra_im_fb1', name: 'Cable Face Pull', defaultSets: 3, repRange: '12–15', isCompound: false },
     { id: 'extra_im_fb2', name: 'Leg Curl', defaultSets: 3, repRange: '10–12', isCompound: false },
+  ],
+  // Longevity Protocol
+  longevity_protocol_mobility_core: [
+    { id: 'extra_lp_mc1', name: 'Foam Roller Thoracic', defaultSets: 2, repRange: '60s', isCompound: false },
+    { id: 'extra_lp_mc2', name: 'World\'s Greatest Stretch', defaultSets: 2, repRange: '5 each', isCompound: false },
+  ],
+  longevity_protocol_strength_maint: [
+    { id: 'extra_lp_sm1', name: 'Dumbbell Lateral Raise', defaultSets: 2, repRange: '12–15', isCompound: false },
+    { id: 'extra_lp_sm2', name: 'Dumbbell Curl', defaultSets: 2, repRange: '10–12', isCompound: false },
+  ],
+  longevity_protocol_cardio_capacity: [
+    { id: 'extra_lp_cc1', name: 'Jumping Jacks', defaultSets: 2, repRange: '30s', isCompound: false },
+  ],
+  longevity_protocol_balance_stability: [
+    { id: 'extra_lp_bs1', name: 'Wall Sit', defaultSets: 2, repRange: '30s', isCompound: false },
+    { id: 'extra_lp_bs2', name: 'Pallof Press (cable)', defaultSets: 2, repRange: '10 each', isCompound: false },
   ],
 };
 
