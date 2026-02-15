@@ -1,7 +1,8 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useMemo } from 'react';
 import { SetLog } from '@/data/exercises';
 import { Minus, Plus, X, Trophy, Play, Check } from 'lucide-react';
 import { ExerciseDemoModal } from '@/components/ExerciseDemoModal';
+import { getDemoForExercise } from '@/data/demoRegistry';
 import { cn } from '@/lib/utils';
 
 interface ExerciseCardProps {
@@ -27,6 +28,7 @@ export function ExerciseCard({
   name, exerciseId, setsCount, repRange, lastSession, currentSets, onSetChange, onSetDone, onSetsCountChange, isBase, onRemove, isPR, mediaUrl,
 }: ExerciseCardProps) {
   const [showDemo, setShowDemo] = useState(false);
+  const demo = useMemo(() => getDemoForExercise(name), [name]);
   // Inline reps editor (tap circle)
   const [editingRepsSet, setEditingRepsSet] = useState<number | null>(null);
   // Inline weight editor (tap weight label)
@@ -138,8 +140,8 @@ export function ExerciseCard({
         <div className="flex-1">
           <div className="flex items-center gap-2">
             <h3
-              className="font-bold text-foreground text-base active:text-primary cursor-pointer"
-              onClick={() => setShowDemo(true)}
+              className={cn("font-bold text-foreground text-base", demo && "active:text-primary cursor-pointer")}
+              onClick={() => { if (demo) setShowDemo(true); }}
             >
               {name}
             </h3>
@@ -153,9 +155,11 @@ export function ExerciseCard({
           <p className="text-sm text-muted-foreground">{currentSets.length} × {repRange}</p>
         </div>
         <div className="flex items-center gap-1">
-          <button onClick={() => setShowDemo(true)} className="text-primary/60 p-1 active:text-primary">
-            <Play size={16} />
-          </button>
+          {demo && (
+            <button onClick={() => setShowDemo(true)} className="text-primary/60 p-1 active:text-primary">
+              <Play size={16} />
+            </button>
+          )}
           {!isBase && onRemove && (
             <button onClick={onRemove} className="text-muted-foreground p-1">
               <X size={18} />
@@ -410,8 +414,8 @@ export function ExerciseCard({
       )}
 
       {/* Demo Modal */}
-      {showDemo && (
-        <ExerciseDemoModal exerciseName={name} onClose={() => setShowDemo(false)} />
+      {showDemo && demo && (
+        <ExerciseDemoModal exerciseName={name} demo={demo} onClose={() => setShowDemo(false)} />
       )}
     </div>
   );

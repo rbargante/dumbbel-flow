@@ -3,7 +3,7 @@ import { Download, Upload } from 'lucide-react';
 import { useRef, useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import { getLastSaved } from '@/lib/storage';
-import { getDemoType } from '@/data/exerciseDemos';
+import { getDemoForExercise, getDemoStats } from '@/data/demoRegistry';
 
 interface SettingsPageProps {
   settings: AppSettings;
@@ -38,11 +38,11 @@ export function SettingsPage({ settings, hydrated, workoutsCount, onUpdateSettin
   const fileRef = useRef<HTMLInputElement>(null);
 
   const demoStats = useMemo(() => {
-    const total = BASE_EXERCISES.length;
-    const uniqueNames = new Set(BASE_EXERCISES.map(e => e.name));
-    const withDemo = Array.from(uniqueNames).filter(n => getDemoType(n) !== 'generic').length;
-    const missing = Array.from(uniqueNames).filter(n => getDemoType(n) === 'generic');
-    return { total, unique: uniqueNames.size, withDemo, missing };
+    const uniqueNames = Array.from(new Set(BASE_EXERCISES.map(e => e.name)));
+    const registry = getDemoStats();
+    const withDemo = uniqueNames.filter(n => getDemoForExercise(n) !== null).length;
+    const missing = uniqueNames.filter(n => getDemoForExercise(n) === null);
+    return { total: BASE_EXERCISES.length, unique: uniqueNames.length, withDemo, missing };
   }, []);
 
   const handleExport = () => {
@@ -143,7 +143,7 @@ export function SettingsPage({ settings, hydrated, workoutsCount, onUpdateSettin
           <span className="text-foreground font-mono text-primary">{demoStats.withDemo}</span>
         </div>
         <div className="flex justify-between text-sm">
-          <span className="text-muted-foreground">Generic placeholder</span>
+          <span className="text-muted-foreground">Missing demos</span>
           <span className="text-foreground font-mono">{demoStats.missing.length}</span>
         </div>
         {demoStats.missing.length > 0 && (
