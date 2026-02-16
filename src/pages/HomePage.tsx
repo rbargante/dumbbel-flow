@@ -40,7 +40,7 @@ export function HomePage({ data, onStartWorkout, onSelectProgram, onContinueLast
   const activeProgram = data.programs.find(p => p.isActive);
 
   const mainPrograms = data.programs.filter(p => p.category === 'main');
-  const complementaryPrograms = data.programs.filter(p => p.category === 'complementary');
+  const complementaryPrograms = data.programs.filter(p => p.category === 'complementary' && p.id !== 'balance_longevity');
   
 
   return (
