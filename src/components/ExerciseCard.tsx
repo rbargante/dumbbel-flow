@@ -1,7 +1,8 @@
 import { useState, useCallback, useRef } from 'react';
 import { SetLog } from '@/data/exercises';
-import { Minus, Plus, X, Trophy, Check } from 'lucide-react';
+import { Plus, X, Trophy, Check } from 'lucide-react';
 import { ExerciseTipsModal } from '@/components/ExerciseTipsModal';
+import { ValuePickerModal } from '@/components/ValuePickerModal';
 import { cn } from '@/lib/utils';
 
 interface ExerciseCardProps {
@@ -26,10 +27,10 @@ export function ExerciseCard({
 }: ExerciseCardProps) {
   const [showTips, setShowTips] = useState(false);
 
-  // Inline reps editor (tap circle)
-  const [editingRepsSet, setEditingRepsSet] = useState<number | null>(null);
-  // Inline weight editor (tap weight label)
-  const [editingWeightSet, setEditingWeightSet] = useState<number | null>(null);
+  // Picker state: which set and which field
+  const [pickerTarget, setPickerTarget] = useState<{ setIdx: number; field: 'reps' | 'weight' } | null>(null);
+  const [pickerValue, setPickerValue] = useState(0);
+
   // AMRAP
   const [amrapSet, setAmrapSet] = useState<number | null>(null);
   const [amrapReps, setAmrapReps] = useState(0);
@@ -42,17 +43,28 @@ export function ExerciseCard({
     return repRange.includes('+') && setIdx === currentSets.length - 1;
   };
 
+  const openPicker = (setIdx: number, field: 'reps' | 'weight') => {
+    const set = currentSets[setIdx];
+    setPickerValue(field === 'reps' ? (set.reps > 0 ? set.reps : 12) : set.weight);
+    setPickerTarget({ setIdx, field });
+  };
+
+  const confirmPicker = () => {
+    if (!pickerTarget) return;
+    onSetChange(pickerTarget.setIdx, pickerTarget.field, pickerValue);
+    setPickerTarget(null);
+  };
+
   const handlePointerDown = useCallback((i: number) => {
     longPressTriggeredRef.current = false;
     longPressTimerRef.current = setTimeout(() => {
       longPressTriggeredRef.current = true;
       const set = currentSets[i];
       if (!set.done) {
-        setEditingRepsSet(editingRepsSet === i ? null : i);
-        setEditingWeightSet(null);
+        openPicker(i, 'reps');
       }
     }, 500);
-  }, [currentSets, editingRepsSet]);
+  }, [currentSets]);
 
   const handlePointerUpOrCancel = useCallback(() => {
     if (longPressTimerRef.current) {
@@ -66,15 +78,13 @@ export function ExerciseCard({
       longPressTriggeredRef.current = false;
       return;
     }
-    // Quick tap: toggle done
     if (isAmrap(i) && !currentSets[i].done) {
       setAmrapReps(currentSets[i].reps || 8);
       setAmrapSet(i);
     } else {
       onSetDone(i);
     }
-    setEditingRepsSet(null);
-    setEditingWeightSet(null);
+    setPickerTarget(null);
   }, [currentSets, onSetDone]);
 
   const confirmAmrap = () => {
@@ -89,17 +99,6 @@ export function ExerciseCard({
     if (currentSets.length >= MAX_SETS || !onSetsCountChange) return;
     onSetsCountChange(currentSets.length + 1);
   }, [currentSets.length, onSetsCountChange]);
-
-  const handleMarkDone = (i: number) => {
-    if (isAmrap(i)) {
-      setAmrapReps(currentSets[i].reps || 8);
-      setAmrapSet(i);
-    } else {
-      onSetDone(i);
-    }
-    setEditingRepsSet(null);
-    setEditingWeightSet(null);
-  };
 
   return (
     <div className="bg-card rounded-lg p-4 space-y-3">
@@ -145,9 +144,7 @@ export function ExerciseCard({
                 'w-14 h-14 rounded-full flex items-center justify-center transition-all border-2 select-none touch-manipulation',
                 set.done
                   ? 'bg-primary border-primary'
-                  : editingRepsSet === i
-                    ? 'bg-primary/20 border-primary'
-                    : 'bg-transparent border-muted-foreground/40'
+                  : 'bg-transparent border-muted-foreground/40'
               )}
             >
               {set.done ? (
@@ -158,14 +155,8 @@ export function ExerciseCard({
             </button>
 
             <button
-              onClick={() => {
-                setEditingWeightSet(editingWeightSet === i ? null : i);
-                setEditingRepsSet(null);
-              }}
-              className={cn(
-                'text-xs font-medium text-center leading-tight min-w-[40px] py-0.5 rounded',
-                editingWeightSet === i ? 'bg-primary/20 text-primary' : 'text-muted-foreground'
-              )}
+              onClick={() => openPicker(i, 'weight')}
+              className="text-xs font-medium text-center leading-tight min-w-[40px] py-0.5 rounded text-muted-foreground"
             >
               {`${set.weight}kg`}
             </button>
@@ -184,88 +175,34 @@ export function ExerciseCard({
         )}
       </div>
 
-      {/* Inline reps editor */}
-      {editingRepsSet !== null && !currentSets[editingRepsSet]?.done && (
-        <div className="bg-secondary rounded-lg p-3 space-y-2">
-          <p className="text-xs text-muted-foreground font-semibold uppercase text-center">
-            Set {editingRepsSet + 1} — Reps
-          </p>
-          <div className="flex items-center justify-center gap-4">
-            <button
-              onClick={() => onSetChange(editingRepsSet, 'reps', Math.max(1, currentSets[editingRepsSet].reps - 1))}
-              className="w-10 h-10 rounded-full bg-card text-foreground flex items-center justify-center active:bg-primary/30"
-            >
-              <Minus size={18} />
-            </button>
-            <span className="text-3xl font-black text-foreground tabular-nums min-w-[50px] text-center">
-              {currentSets[editingRepsSet].reps}
-            </span>
-            <button
-              onClick={() => onSetChange(editingRepsSet, 'reps', currentSets[editingRepsSet].reps + 1)}
-              className="w-10 h-10 rounded-full bg-card text-foreground flex items-center justify-center active:bg-primary/30"
-            >
-              <Plus size={18} />
-            </button>
-          </div>
-          <div className="flex gap-2">
-            <button onClick={() => setEditingRepsSet(null)} className="flex-1 text-center text-xs text-muted-foreground py-2">Cancel</button>
-            <button
-              onClick={() => setEditingRepsSet(null)}
-              className="flex-1 bg-primary text-primary-foreground font-bold py-2 rounded-lg text-sm flex items-center justify-center gap-1"
-            >
-              <Check size={14} /> Done
-            </button>
-          </div>
-        </div>
+      {/* Unified picker modal for reps or weight */}
+      {pickerTarget && (
+        <ValuePickerModal
+          title={pickerTarget.field === 'reps' ? `Set ${pickerTarget.setIdx + 1} — Reps` : `Set ${pickerTarget.setIdx + 1} — Weight`}
+          value={pickerValue}
+          onChange={setPickerValue}
+          onConfirm={confirmPicker}
+          onCancel={() => setPickerTarget(null)}
+          min={pickerTarget.field === 'reps' ? 1 : 0}
+          max={pickerTarget.field === 'reps' ? 100 : 60}
+          step={pickerTarget.field === 'reps' ? 1 : 2}
+          suffix={pickerTarget.field === 'weight' ? 'kg' : undefined}
+        />
       )}
 
-      {/* Per-set weight editor — +/- only, no grid */}
-      {editingWeightSet !== null && (
-        <div className="bg-secondary rounded-lg p-3 space-y-3">
-          <p className="text-xs text-muted-foreground font-semibold uppercase text-center">
-            Set {editingWeightSet + 1} — Weight
-          </p>
-          <div className="flex items-center justify-center gap-3">
-            <button
-              onClick={() => {
-                const newVal = Math.max(0, currentSets[editingWeightSet].weight - 2);
-                onSetChange(editingWeightSet, 'weight', Math.round(newVal / 2) * 2);
-              }}
-              className="w-10 h-10 rounded-full bg-card text-foreground flex items-center justify-center active:bg-primary/30"
-            >
-              <Minus size={18} />
-            </button>
-            <span className="text-2xl font-black text-foreground tabular-nums min-w-[70px] text-center">
-              {currentSets[editingWeightSet].weight}<span className="text-sm text-muted-foreground ml-1">kg</span>
-            </span>
-            <button
-              onClick={() => {
-                const newVal = Math.min(60, currentSets[editingWeightSet].weight + 2);
-                onSetChange(editingWeightSet, 'weight', Math.round(newVal / 2) * 2);
-              }}
-              className="w-10 h-10 rounded-full bg-card text-foreground flex items-center justify-center active:bg-primary/30"
-            >
-              <Plus size={18} />
-            </button>
-          </div>
-          <button onClick={() => setEditingWeightSet(null)} className="w-full text-center text-xs text-muted-foreground py-1">Done</button>
-        </div>
-      )}
-
-      {/* AMRAP Modal */}
+      {/* AMRAP Modal — also uses unified picker */}
       {amrapSet !== null && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70" onClick={() => setAmrapSet(null)}>
-          <div className="bg-card rounded-xl p-6 w-72 space-y-4" onClick={e => e.stopPropagation()}>
-            <h3 className="text-lg font-black text-foreground text-center">AMRAP</h3>
-            <p className="text-sm text-muted-foreground text-center">Enter reps achieved</p>
-            <div className="flex items-center justify-center gap-4">
-              <button onClick={() => setAmrapReps(Math.max(1, amrapReps - 1))} className="w-12 h-12 rounded-full bg-secondary text-foreground flex items-center justify-center"><Minus size={20} /></button>
-              <span className="text-4xl font-black text-foreground tabular-nums min-w-[60px] text-center">{amrapReps}</span>
-              <button onClick={() => setAmrapReps(amrapReps + 1)} className="w-12 h-12 rounded-full bg-secondary text-foreground flex items-center justify-center"><Plus size={20} /></button>
-            </div>
-            <button onClick={confirmAmrap} className="w-full bg-primary text-primary-foreground font-bold py-3 rounded-lg text-lg">OK</button>
-          </div>
-        </div>
+        <ValuePickerModal
+          title="AMRAP"
+          subtitle="Enter reps achieved"
+          value={amrapReps}
+          onChange={setAmrapReps}
+          onConfirm={confirmAmrap}
+          onCancel={() => setAmrapSet(null)}
+          min={1}
+          max={100}
+          step={1}
+        />
       )}
 
       {/* Last session reference */}
