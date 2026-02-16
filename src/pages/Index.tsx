@@ -3,6 +3,7 @@ import { useAppData } from '@/hooks/useAppData';
 import { BottomNav } from '@/components/BottomNav';
 import { HomePage } from '@/pages/HomePage';
 import { WorkoutSelectPage } from '@/pages/WorkoutSelectPage';
+import { WorkoutPreviewPage } from '@/pages/WorkoutPreviewPage';
 import { PelvicResetPage } from '@/pages/PelvicResetPage';
 import { WorkoutPage } from '@/pages/WorkoutPage';
 import { HistoryPage } from '@/pages/HistoryPage';
@@ -10,7 +11,7 @@ import { SettingsPage } from '@/pages/SettingsPage';
 import { PROGRAM_DAY_ORDERS, DAY_ORDER } from '@/data/exercises';
 import { loadActiveSession, clearActiveSession, ActiveSession } from '@/lib/storage';
 
-type Screen = 'home' | 'workout-select' | 'history' | 'settings' | 'pelvic-reset' | 'workout';
+type Screen = 'home' | 'workout-select' | 'workout-preview' | 'history' | 'settings' | 'pelvic-reset' | 'workout';
 
 const Index = () => {
   const appData = useAppData();
@@ -56,7 +57,7 @@ const Index = () => {
     const program = appData.data.programs.find(p => p.id === programId);
     if (program && !program.comingSoon) {
       setSelectedProgramId(programId);
-      navigate('workout-select');
+      navigate('workout-preview');
     }
   };
 
@@ -100,6 +101,14 @@ const Index = () => {
           onContinueLastWorkout={handleResumeFromHome}
         />
       )}
+      {screen === 'workout-preview' && workoutProgram && (
+        <WorkoutPreviewPage
+          program={workoutProgram}
+          workouts={appData.data.workouts}
+          onStart={() => navigate('workout-select')}
+          onBack={() => { setSelectedProgramId(null); navigate('home'); }}
+        />
+      )}
       {screen === 'workout-select' && (
         <WorkoutSelectPage
           programId={workoutProgramId}
@@ -107,7 +116,7 @@ const Index = () => {
           nextDayIndex={appData.data.nextDayIndex}
           onSelectDay={(dayIndex) => startWorkoutFlow(dayIndex)}
           onStartNext={() => startWorkoutFlow()}
-          onBack={() => { setSelectedProgramId(null); navigate('home'); }}
+          onBack={() => navigate('workout-preview')}
         />
       )}
       {screen === 'pelvic-reset' && (

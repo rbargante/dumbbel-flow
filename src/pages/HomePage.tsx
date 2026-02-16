@@ -39,7 +39,7 @@ export function HomePage({ data, onStartWorkout, onSelectProgram, onContinueLast
 
   const activeProgram = data.programs.find(p => p.isActive);
 
-  const mainPrograms = data.programs.filter(p => p.category === 'main');
+  const mainPrograms = data.programs.filter(p => p.category === 'main' && !p.id.includes('longevity'));
   const complementaryPrograms = data.programs.filter(p => p.category === 'complementary' && p.id !== 'balance_longevity');
   
 
@@ -180,8 +180,10 @@ function ProgramCard({
   const isLocked = !!program.comingSoon;
 
   return (
-    <div
-      className={`bg-card rounded-xl p-4 space-y-3 transition-all ${
+    <button
+      onClick={() => !isLocked && onStart()}
+      disabled={isLocked}
+      className={`w-full text-left bg-card rounded-xl p-4 space-y-3 transition-all active:scale-[0.99] ${
         isActive
           ? 'border-2 border-primary'
           : isLocked
@@ -223,17 +225,12 @@ function ProgramCard({
           </span>
         </div>
 
-        {!isLocked ? (
-          <button
-            onClick={(e) => { e.stopPropagation(); onStart(); }}
-            className="flex items-center gap-1.5 bg-primary text-primary-foreground font-bold text-sm px-5 py-2.5 rounded-lg active:scale-[0.97] transition-transform"
-          >
-            <Play size={14} fill="currentColor" /> START
-          </button>
-        ) : (
+        {isLocked ? (
           <Lock size={18} className="text-muted-foreground" />
+        ) : (
+          <ChevronRight size={20} className="text-muted-foreground" />
         )}
       </div>
-    </div>
+    </button>
   );
 }
