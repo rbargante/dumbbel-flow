@@ -95,7 +95,7 @@ const Index = () => {
       {screen === 'home' && (
         <HomePage
           data={appData.data}
-          onStartWorkout={() => navigate('workout-select')}
+          onStartWorkout={() => { setSelectedProgramId(activeProgramId); navigate('workout-select'); }}
           onSelectProgram={handleSelectProgram}
           hasActiveSession={hasActiveSession}
           onContinueLastWorkout={handleResumeFromHome}

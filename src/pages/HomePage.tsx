@@ -1,6 +1,5 @@
-import { useState, useEffect } from 'react';
-import { AppData, Program, DAY_NAMES, DAY_ORDER, PROGRAM_DAY_ORDERS } from '@/data/exercises';
-import { Dumbbell, ChevronRight, Download, Share2, Play, Lock, RotateCcw, Grip, Activity } from 'lucide-react';
+import { AppData, Program } from '@/data/exercises';
+import { Dumbbell, ChevronRight, Download, Share2, Play, Lock, RotateCcw } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { useInstallPrompt } from '@/hooks/useInstallPrompt';
 
@@ -10,14 +9,6 @@ interface HomePageProps {
   onSelectProgram: (programId: string) => void;
   onContinueLastWorkout?: () => void;
   hasActiveSession?: boolean;
-}
-
-function getEquipmentIcon(equipment: string[]) {
-  const first = equipment[0]?.toLowerCase() || '';
-  if (first.includes('ez')) return <Grip size={18} className="text-primary" />;
-  if (first.includes('full home') || first.includes('ironmaster')) return <Dumbbell size={18} className="text-primary" />;
-  if (first.includes('bodyweight')) return <Activity size={18} className="text-primary" />;
-  return <Dumbbell size={18} className="text-primary" />;
 }
 
 export function HomePage({ data, onStartWorkout, onSelectProgram, onContinueLastWorkout, hasActiveSession }: HomePageProps) {
@@ -38,10 +29,8 @@ export function HomePage({ data, onStartWorkout, onSelectProgram, onContinueLast
   };
 
   const activeProgram = data.programs.find(p => p.isActive);
-
   const mainPrograms = data.programs.filter(p => p.category === 'main' && !p.id.includes('longevity'));
   const complementaryPrograms = data.programs.filter(p => p.category === 'complementary' && p.id !== 'balance_longevity');
-  
 
   return (
     <div className="px-4 pt-10 pb-24 max-w-md mx-auto space-y-6">
@@ -76,7 +65,7 @@ export function HomePage({ data, onStartWorkout, onSelectProgram, onContinueLast
           const nextDayLabel = activeProgram.workoutDays[data.nextDayIndex % activeProgram.workoutDays.length];
           return (
             <button
-              onClick={() => onSelectProgram(activeProgram.id)}
+              onClick={onStartWorkout}
               className="w-full bg-card border-2 border-primary rounded-xl p-5 flex items-center justify-between active:scale-[0.98] transition-transform"
             >
               <div className="flex items-center gap-3">
@@ -93,65 +82,66 @@ export function HomePage({ data, onStartWorkout, onSelectProgram, onContinueLast
         return null;
       })()}
 
-      {/* Main Workouts */}
-      <div className="space-y-3">
+      {/* Active Plan */}
+      {activeProgram && (
+        <div className="bg-card rounded-xl p-4 border border-secondary">
+          <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold mb-1">Active Plan</p>
+          <p className="text-sm font-bold text-foreground">{activeProgram.name}</p>
+        </div>
+      )}
+
+      {/* Main Workouts — minimal list */}
+      <div className="space-y-2">
         <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">
           Main Workouts
         </p>
-        {mainPrograms.map((program) => {
-          const dayOrder = PROGRAM_DAY_ORDERS[program.id] || ['push'];
-          const nextDayLabel = program.isActive
-            ? program.workoutDays[data.nextDayIndex % program.workoutDays.length]
-            : program.workoutDays[0];
-          return (
-            <ProgramCard
+        <div className="bg-card rounded-xl border border-secondary divide-y divide-secondary">
+          {mainPrograms.map((program) => (
+            <ProgramRow
               key={program.id}
               program={program}
-              nextDayLabel={nextDayLabel}
-              onStart={() => onSelectProgram(program.id)}
+              onTap={() => onSelectProgram(program.id)}
             />
-          );
-        })}
+          ))}
+        </div>
       </div>
 
-      {/* Complementary */}
-      <div className="space-y-3">
+      {/* Complementary — minimal list */}
+      <div className="space-y-2">
         <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">
           Complementary
         </p>
-        {complementaryPrograms.map((program) => (
-          <ProgramCard
-            key={program.id}
-            program={program}
-            nextDayLabel={program.workoutDays[0]}
-            onStart={() => onSelectProgram(program.id)}
-          />
-        ))}
+        <div className="bg-card rounded-xl border border-secondary divide-y divide-secondary">
+          {complementaryPrograms.map((program) => (
+            <ProgramRow
+              key={program.id}
+              program={program}
+              onTap={() => onSelectProgram(program.id)}
+            />
+          ))}
+        </div>
       </div>
 
       {/* Quick Actions */}
-      <div className="space-y-3">
-
-        <div className="flex gap-3">
-          {installPrompt && !isInstalled ? (
-            <button
-              onClick={promptInstall}
-              className="flex-1 flex items-center justify-center gap-2 bg-primary text-primary-foreground font-bold py-3 rounded-xl active:scale-[0.98] transition-transform"
-            >
-              <Download size={18} /> Install App
-            </button>
-          ) : isInstalled ? (
-            <div className="flex-1 flex items-center justify-center gap-2 bg-card text-muted-foreground font-bold py-3 rounded-xl">
-              <Download size={18} /> Installed
-            </div>
-          ) : null}
+      <div className="flex gap-3">
+        {installPrompt && !isInstalled ? (
           <button
-            onClick={handleShare}
-            className={`${installPrompt || isInstalled ? 'flex-1' : 'w-full'} flex items-center justify-center gap-2 bg-card text-foreground font-bold py-3 rounded-xl active:scale-[0.98] transition-transform border border-secondary`}
+            onClick={promptInstall}
+            className="flex-1 flex items-center justify-center gap-2 bg-primary text-primary-foreground font-bold py-3 rounded-xl active:scale-[0.98] transition-transform"
           >
-            <Share2 size={18} /> Share
+            <Download size={18} /> Install App
           </button>
-        </div>
+        ) : isInstalled ? (
+          <div className="flex-1 flex items-center justify-center gap-2 bg-card text-muted-foreground font-bold py-3 rounded-xl">
+            <Download size={18} /> Installed
+          </div>
+        ) : null}
+        <button
+          onClick={handleShare}
+          className={`${installPrompt || isInstalled ? 'flex-1' : 'w-full'} flex items-center justify-center gap-2 bg-card text-foreground font-bold py-3 rounded-xl active:scale-[0.98] transition-transform border border-secondary`}
+        >
+          <Share2 size={18} /> Share
+        </button>
       </div>
 
       {/* Workout count */}
@@ -163,74 +153,31 @@ export function HomePage({ data, onStartWorkout, onSelectProgram, onContinueLast
   );
 }
 
-/* ─── Program Card ─── */
+/* ─── Minimal Program Row ─── */
 
-function ProgramCard({
-  program,
-  nextDayLabel,
-  onStart,
-  icon,
-}: {
-  program: Program;
-  nextDayLabel: string;
-  onStart: () => void;
-  icon?: React.ReactNode;
-}) {
-  const isActive = program.isActive;
+function ProgramRow({ program, onTap }: { program: Program; onTap: () => void }) {
   const isLocked = !!program.comingSoon;
 
   return (
     <button
-      onClick={() => !isLocked && onStart()}
+      onClick={() => !isLocked && onTap()}
       disabled={isLocked}
-      className={`w-full text-left bg-card rounded-xl p-4 space-y-3 transition-all active:scale-[0.99] ${
-        isActive
-          ? 'border-2 border-primary'
-          : isLocked
-          ? 'opacity-45 border border-secondary'
-          : 'border border-secondary'
+      className={`w-full flex items-center justify-between px-4 py-3.5 text-left transition-colors active:bg-secondary/50 ${
+        isLocked ? 'opacity-45' : ''
       }`}
     >
-      <div className="space-y-1.5">
-        <div className="flex items-center gap-2">
-          {icon || getEquipmentIcon(program.equipment)}
-          <h3 className="text-base font-bold text-foreground truncate">
-            {program.name}
-          </h3>
-          {isActive && (
-            <span className="bg-primary text-primary-foreground text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0">
-              ACTIVE
-            </span>
-          )}
-          {isLocked && (
-            <span className="bg-secondary text-muted-foreground text-[10px] font-semibold px-2 py-0.5 rounded-full shrink-0">
-              Coming soon
-            </span>
-          )}
-        </div>
-        <div className="flex gap-1.5 flex-wrap ml-[26px]">
-          {program.equipment.map(eq => (
-            <span key={eq} className="text-[10px] bg-secondary text-muted-foreground px-2 py-0.5 rounded-md">
-              {eq}
-            </span>
-          ))}
-        </div>
-      </div>
-
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <ChevronRight size={14} className="text-primary" />
-          <span>
-            {isLocked ? '—' : `Next: ${nextDayLabel}`}
+      <div className="flex items-center gap-2 min-w-0">
+        <span className="text-sm font-semibold text-foreground truncate">{program.name}</span>
+        {program.isActive && (
+          <span className="bg-primary text-primary-foreground text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0">
+            ACTIVE
           </span>
-        </div>
-
-        {isLocked ? (
-          <Lock size={18} className="text-muted-foreground" />
-        ) : (
-          <ChevronRight size={20} className="text-muted-foreground" />
+        )}
+        {isLocked && (
+          <Lock size={14} className="text-muted-foreground shrink-0" />
         )}
       </div>
+      <ChevronRight size={18} className="text-muted-foreground shrink-0" />
     </button>
   );
 }
