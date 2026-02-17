@@ -1,4 +1,4 @@
-import { ArrowLeft, Play, Clock, Dumbbell, Calendar } from 'lucide-react';
+import { ArrowLeft, Play, Clock, Dumbbell, Calendar, CheckCircle } from 'lucide-react';
 import { BASE_EXERCISES, PROGRAM_DAY_ORDERS, DAY_NAMES, WorkoutDay, Program, WorkoutLog } from '@/data/exercises';
 
 interface WorkoutPreviewPageProps {
@@ -6,9 +6,10 @@ interface WorkoutPreviewPageProps {
   workouts: WorkoutLog[];
   onStart: () => void;
   onBack: () => void;
+  onSetActive?: () => void;
 }
 
-export function WorkoutPreviewPage({ program, workouts, onStart, onBack }: WorkoutPreviewPageProps) {
+export function WorkoutPreviewPage({ program, workouts, onStart, onBack, onSetActive }: WorkoutPreviewPageProps) {
   const dayOrder = PROGRAM_DAY_ORDERS[program.id] || [];
   const exercises = BASE_EXERCISES.filter(e => e.programId === program.id);
 
@@ -25,20 +26,33 @@ export function WorkoutPreviewPage({ program, workouts, onStart, onBack }: Worko
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="px-4 pt-6 pb-32 max-w-md mx-auto space-y-5">
-        {/* Header */}
-        <div className="flex items-center gap-3">
+      {/* Sticky Header */}
+      <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-sm border-b border-secondary">
+        <div className="px-4 py-3 max-w-md mx-auto flex items-center gap-3">
           <button
             onClick={onBack}
             className="p-2 -ml-2 rounded-lg active:bg-secondary transition-colors"
           >
             <ArrowLeft size={22} className="text-foreground" />
           </button>
-          <div className="flex-1 min-w-0">
-            <h1 className="text-xl font-black text-foreground truncate">{program.name}</h1>
-            <p className="text-xs text-muted-foreground">Workout preview</p>
-          </div>
+          <h1 className="text-lg font-black text-foreground truncate flex-1">{program.name}</h1>
+          {!program.isActive && onSetActive && (
+            <button
+              onClick={onSetActive}
+              className="text-xs font-bold text-primary px-3 py-1.5 rounded-lg border border-primary active:bg-primary/10 transition-colors shrink-0"
+            >
+              SET ACTIVE
+            </button>
+          )}
+          {program.isActive && (
+            <span className="bg-primary text-primary-foreground text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0">
+              ACTIVE
+            </span>
+          )}
         </div>
+      </div>
+
+      <div className="px-4 pt-4 pb-32 max-w-md mx-auto space-y-5">
 
         {/* Tags */}
         <div className="flex gap-1.5 flex-wrap">

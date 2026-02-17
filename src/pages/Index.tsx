@@ -130,6 +130,7 @@ const Index = () => {
           workouts={appData.data.workouts}
           onStart={() => navigate('workout-select')}
           onBack={() => { setSelectedProgramId(null); navigate('home'); }}
+          onSetActive={() => appData.setActiveProgram(workoutProgramId)}
         />
       )}
       {screen === 'workout-select' && (

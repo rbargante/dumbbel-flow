@@ -76,6 +76,20 @@ export function useAppData() {
     });
   }, []);
 
+  const setActiveProgram = useCallback((programId: string) => {
+    setData(prev => {
+      const next = {
+        ...prev,
+        programs: prev.programs.map(p => ({
+          ...p,
+          isActive: p.id === programId,
+        })),
+      };
+      saveState(next);
+      return next;
+    });
+  }, []);
+
   const importData = useCallback((imported: AppData) => {
     const next = { ...DEFAULT_APP_DATA, ...imported };
     saveState(next);
@@ -86,5 +100,5 @@ export function useAppData() {
     return JSON.stringify(data, null, 2);
   }, [data]);
 
-  return { data, hydrated, advanceDay, saveWorkout, saveProgress, updateSettings, importData, exportData };
+  return { data, hydrated, advanceDay, saveWorkout, saveProgress, updateSettings, setActiveProgram, importData, exportData };
 }
