@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAppData } from '@/hooks/useAppData';
 import { BottomNav } from '@/components/BottomNav';
 import { HomePage } from '@/pages/HomePage';
@@ -36,10 +36,33 @@ const Index = () => {
   const workoutProgramId = selectedProgramId || activeProgramId;
   const workoutProgram = appData.data.programs.find(p => p.id === workoutProgramId);
 
-  const navigate = (s: Screen) => {
+  const navigate = useCallback((s: Screen) => {
     setScreen(s);
     if (s === 'home' || s === 'history' || s === 'settings') setActiveTab(s);
-  };
+    if (s !== 'home' && s !== 'history' && s !== 'settings') {
+      window.history.pushState({ screen: s }, '');
+    }
+  }, []);
+
+  // Handle Android back button / browser back
+  useEffect(() => {
+    const handlePopState = () => {
+      setScreen(prev => {
+        if (prev === 'workout-preview') {
+          setSelectedProgramId(null);
+          return 'home';
+        }
+        if (prev === 'workout-select') return 'workout-preview';
+        if (prev === 'pelvic-reset') return 'workout-select';
+        if (prev !== 'home' && prev !== 'history' && prev !== 'settings') {
+          return 'home';
+        }
+        return 'home';
+      });
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
 
   const startWorkoutFlow = (dayIndex?: number) => {
     if (dayIndex !== undefined) setOverrideDayIndex(dayIndex);
