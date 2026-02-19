@@ -5,9 +5,8 @@ import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
-  // ✅ GitHub Pages repo project: /dumbbel-flow/
-  // Em dev queremos "/"
-  base: mode === "production" ? "/dumbbel-flow/" : "/",
+  // ✅ Using custom domain → base MUST be "/"
+  base: "/",
 
   server: {
     host: "::",
@@ -17,7 +16,10 @@ export default defineConfig(({ mode }) => ({
     },
   },
 
-  plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
+  plugins: [
+    react(),
+    mode === "development" && componentTagger(),
+  ].filter(Boolean),
 
   resolve: {
     alias: {
