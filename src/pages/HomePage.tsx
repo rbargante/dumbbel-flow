@@ -47,16 +47,13 @@ export function HomePage({
 
   const activeProgram = data.programs.find((p) => p.isActive);
 
-  const mainProgramsRaw = data.programs.filter(
+  const mainPrograms = data.programs.filter(
     (p) => p.category === "main" && !p.id.includes("longevity")
   );
 
   const complementaryPrograms = data.programs.filter(
     (p) => p.category === "complementary" && p.id !== "balance_longevity"
   );
-
-  // Keep original order (do NOT move active to top)
-  const mainPrograms = mainProgramsRaw;
 
   return (
     <div className="px-4 pt-10 pb-24 max-w-md mx-auto space-y-6">
@@ -124,7 +121,7 @@ export function HomePage({
           Main Workouts
         </p>
 
-        <div className="bg-card rounded-xl border border-secondary divide-y divide-secondary overflow-hidden">
+        <div className="space-y-2">
           {mainPrograms.map((program) => (
             <ProgramRow
               key={program.id}
@@ -140,7 +137,8 @@ export function HomePage({
         <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">
           Complementary
         </p>
-        <div className="bg-card rounded-xl border border-secondary divide-y divide-secondary">
+
+        <div className="space-y-2">
           {complementaryPrograms.map((program) => (
             <ProgramRow
               key={program.id}
@@ -187,7 +185,6 @@ export function HomePage({
   );
 }
 
-/* ─── Program Row ─── */
 function ProgramRow({
   program,
   onTap,
@@ -202,13 +199,16 @@ function ProgramRow({
     <button
       onClick={() => !isLocked && onTap()}
       disabled={isLocked}
-      className={`relative w-full flex items-center justify-between px-4 py-3.5 text-left transition-colors active:bg-secondary/50 ${
-        isLocked ? "opacity-45" : ""
-      }`}
+      className={[
+        "relative w-full flex items-center justify-between px-4 py-3.5 text-left",
+        "rounded-xl border border-secondary bg-card",
+        "shadow-sm shadow-black/10",
+        "transition-colors active:bg-secondary/50",
+        isLocked ? "opacity-45" : "",
+      ].join(" ")}
     >
-      {/* Left red accent only for ACTIVE */}
       {isActive && (
-        <span className="absolute left-0 top-0 h-full w-1 bg-primary" />
+        <span className="absolute left-0 top-0 h-full w-1 bg-primary rounded-l-xl" />
       )}
 
       <div className="flex items-center gap-2 min-w-0">
