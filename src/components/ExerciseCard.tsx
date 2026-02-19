@@ -23,19 +23,28 @@ interface ExerciseCardProps {
 const MAX_SETS = 10;
 
 export function ExerciseCard({
-  name, exerciseId, setsCount, repRange, lastSession, currentSets, onSetChange, onSetDone, onSetsCountChange, isBase, onRemove, isPR,
+  name,
+  exerciseId,
+  setsCount,
+  repRange,
+  lastSession,
+  currentSets,
+  onSetChange,
+  onSetDone,
+  onSetsCountChange,
+  isBase,
+  onRemove,
+  isPR,
 }: ExerciseCardProps) {
+
   const [showTips, setShowTips] = useState(false);
 
-  // Picker state: which set and which field
   const [pickerTarget, setPickerTarget] = useState<{ setIdx: number; field: 'reps' | 'weight' } | null>(null);
   const [pickerValue, setPickerValue] = useState(0);
 
-  // AMRAP
   const [amrapSet, setAmrapSet] = useState<number | null>(null);
   const [amrapReps, setAmrapReps] = useState(0);
 
-  // Long-press handling
   const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const longPressTriggeredRef = useRef(false);
 
@@ -102,7 +111,7 @@ export function ExerciseCard({
 
   return (
     <div className="bg-card rounded-lg p-4 space-y-3">
-      {/* Header */}
+
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1">
           <div className="flex items-center gap-2">
@@ -112,6 +121,7 @@ export function ExerciseCard({
             >
               {name}
             </h3>
+
             {isPR && (
               <span className="flex items-center gap-1 bg-primary/20 text-primary text-xs font-bold px-2 py-0.5 rounded-full">
                 <Trophy size={10} />
@@ -119,21 +129,23 @@ export function ExerciseCard({
               </span>
             )}
           </div>
-          <p className="text-sm text-muted-foreground">{currentSets.length} × {repRange}</p>
+
+          <p className="text-sm text-muted-foreground">
+            {currentSets.length} × {repRange}
+          </p>
         </div>
-        <div className="flex items-center gap-1">
-          {!isBase && onRemove && (
-            <button onClick={onRemove} className="text-muted-foreground p-1">
-              <X size={18} />
-            </button>
-          )}
-        </div>
+
+        {!isBase && onRemove && (
+          <button onClick={onRemove} className="text-muted-foreground p-1">
+            <X size={18} />
+          </button>
+        )}
       </div>
 
-      {/* Set circles row */}
       <div className="flex items-start justify-center gap-4 flex-wrap">
         {currentSets.map((set, i) => (
           <div key={i} className="flex flex-col items-center gap-1">
+
             <button
               onClick={() => handleCircleTap(i)}
               onPointerDown={() => handlePointerDown(i)}
@@ -150,7 +162,9 @@ export function ExerciseCard({
               {set.done ? (
                 <Check size={24} className="text-primary-foreground" strokeWidth={3} />
               ) : (
-                <span className="text-lg font-black text-foreground">{set.reps > 0 ? set.reps : 12}</span>
+                <span className="text-lg font-black text-foreground">
+                  {set.reps > 0 ? set.reps : 12}
+                </span>
               )}
             </button>
 
@@ -162,6 +176,7 @@ export function ExerciseCard({
             </button>
           </div>
         ))}
+
         {onSetsCountChange && currentSets.length < MAX_SETS && (
           <div className="flex flex-col items-center gap-1">
             <button
@@ -175,10 +190,11 @@ export function ExerciseCard({
         )}
       </div>
 
-      {/* Unified picker modal for reps or weight */}
       {pickerTarget && (
         <ValuePickerModal
-          title={pickerTarget.field === 'reps' ? `Set ${pickerTarget.setIdx + 1} — Reps` : `Set ${pickerTarget.setIdx + 1} — Weight`}
+          title={pickerTarget.field === 'reps'
+            ? `Set ${pickerTarget.setIdx + 1} — Reps`
+            : `Set ${pickerTarget.setIdx + 1} — Weight`}
           value={pickerValue}
           onChange={setPickerValue}
           onConfirm={confirmPicker}
@@ -190,7 +206,6 @@ export function ExerciseCard({
         />
       )}
 
-      {/* AMRAP Modal — also uses unified picker */}
       {amrapSet !== null && (
         <ValuePickerModal
           title="AMRAP"
@@ -205,16 +220,17 @@ export function ExerciseCard({
         />
       )}
 
-      {/* Last session reference */}
       {lastSession && lastSession.length > 0 && (
         <p className="text-xs text-muted-foreground text-center">
-          Last: {lastSession.map((s, i) => `${s.weight}kg×${s.reps}`).join(' · ')}
+          Last: {lastSession.map((s) => `${s.weight}kg×${s.reps}`).join(' · ')}
         </p>
       )}
 
-      {/* Technique Tips Modal */}
       {showTips && (
-        <ExerciseTipsModal exerciseName={name} onClose={() => setShowTips(false)} />
+        <ExerciseTipsModal
+          exerciseName={name}
+          onClose={() => setShowTips(false)}
+        />
       )}
     </div>
   );

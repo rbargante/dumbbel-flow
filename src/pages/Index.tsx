@@ -11,7 +11,14 @@ import { SettingsPage } from '@/pages/SettingsPage';
 import { PROGRAM_DAY_ORDERS, DAY_ORDER } from '@/data/exercises';
 import { loadActiveSession, clearActiveSession, ActiveSession } from '@/lib/storage';
 
-type Screen = 'home' | 'workout-select' | 'workout-preview' | 'history' | 'settings' | 'pelvic-reset' | 'workout';
+type Screen =
+  | 'home'
+  | 'workout-select'
+  | 'workout-preview'
+  | 'history'
+  | 'settings'
+  | 'pelvic-reset'
+  | 'workout';
 
 const Index = () => {
   const appData = useAppData();
@@ -19,8 +26,9 @@ const Index = () => {
   // Check for active session on mount
   const savedSession = loadActiveSession();
 
-  const [screen, setScreen] = useState<Screen>(() => savedSession ? 'workout' : 'home');
+  const [screen, setScreen] = useState<Screen>(() => (savedSession ? 'workout' : 'home'));
   const [activeTab, setActiveTab] = useState<'home' | 'history' | 'settings'>('home');
+
   const [overrideDayIndex, setOverrideDayIndex] = useState<number | null>(() =>
     savedSession ? savedSession.dayIndex : null
   );
@@ -29,12 +37,12 @@ const Index = () => {
   );
   const [restoredSession, setRestoredSession] = useState<ActiveSession | null>(savedSession);
 
-  const activeProgram = appData.data.programs.find(p => p.isActive);
+  const activeProgram = appData.data.programs.find((p) => p.isActive);
   const activeProgramId = activeProgram?.id || 'ppl_dumbbell';
 
   // Use selected program for workout flow, fallback to active
   const workoutProgramId = selectedProgramId || activeProgramId;
-  const workoutProgram = appData.data.programs.find(p => p.id === workoutProgramId);
+  const workoutProgram = appData.data.programs.find((p) => p.id === workoutProgramId);
 
   const navigate = useCallback((s: Screen) => {
     setScreen(s);
@@ -47,7 +55,7 @@ const Index = () => {
   // Handle Android back button / browser back
   useEffect(() => {
     const handlePopState = () => {
-      setScreen(prev => {
+      setScreen((prev) => {
         if (prev === 'workout-preview') {
           setSelectedProgramId(null);
           return 'home';
@@ -67,7 +75,12 @@ const Index = () => {
   const startWorkoutFlow = (dayIndex?: number) => {
     if (dayIndex !== undefined) setOverrideDayIndex(dayIndex);
     else setOverrideDayIndex(null);
+
     setRestoredSession(null); // Fresh workout, no restore
+
+    // ✅ IMPORTANT: o programa que vais treinar passa automaticamente a ACTIVE
+    // Isto resolve o "ACTIVE fica sempre no Dumbbell PPL"
+    appData.setActiveProgram(workoutProgramId);
 
     if (appData.data.settings.requirePelvicReset) {
       navigate('pelvic-reset');
@@ -77,7 +90,7 @@ const Index = () => {
   };
 
   const handleSelectProgram = (programId: string) => {
-    const program = appData.data.programs.find(p => p.id === programId);
+    const program = appData.data.programs.find((p) => p.id === programId);
     if (program && !program.comingSoon) {
       setSelectedProgramId(programId);
       navigate('workout-preview');
@@ -104,6 +117,10 @@ const Index = () => {
       setSelectedProgramId(session.programId);
       setOverrideDayIndex(session.dayIndex);
       setRestoredSession(session);
+
+      // Opcional mas bom: garantir que o programa da sessão fica ACTIVE
+      appData.setActiveProgram(session.programId);
+
       navigate('workout');
     }
   };
@@ -118,21 +135,29 @@ const Index = () => {
       {screen === 'home' && (
         <HomePage
           data={appData.data}
-          onStartWorkout={() => { setSelectedProgramId(activeProgramId); navigate('workout-select'); }}
+          onStartWorkout={() => {
+            setSelectedProgramId(activeProgramId);
+            navigate('workout-select');
+          }}
           onSelectProgram={handleSelectProgram}
           hasActiveSession={hasActiveSession}
           onContinueLastWorkout={handleResumeFromHome}
         />
       )}
+
       {screen === 'workout-preview' && workoutProgram && (
         <WorkoutPreviewPage
           program={workoutProgram}
           workouts={appData.data.workouts}
           onStart={() => navigate('workout-select')}
-          onBack={() => { setSelectedProgramId(null); navigate('home'); }}
+          onBack={() => {
+            setSelectedProgramId(null);
+            navigate('home');
+          }}
           onSetActive={() => appData.setActiveProgram(workoutProgramId)}
         />
       )}
+
       {screen === 'workout-select' && (
         <WorkoutSelectPage
           programId={workoutProgramId}
@@ -143,22 +168,26 @@ const Index = () => {
           onBack={() => navigate('workout-preview')}
         />
       )}
+
       {screen === 'pelvic-reset' && (
-        <PelvicResetPage
-          onStart={() => navigate('workout')}
-          onBack={() => navigate('workout-select')}
-        />
+        <PelvicResetPage onStart={() => navigate('workout')} onBack={() => navigate('workout-select')} />
       )}
+
       {screen === 'workout' && (
         <WorkoutPage
           data={{ ...appData.data, nextDayIndex: effectiveDayIndex }}
           programId={workoutProgramId}
-          onFinish={(workout) => { appData.saveWorkout(workout); handleFinishWorkout(); }}
+          onFinish={(workout) => {
+            appData.saveWorkout(workout);
+            handleFinishWorkout();
+          }}
           onHome={handleGoHome}
           restoredSession={restoredSession}
         />
       )}
+
       {screen === 'history' && <HistoryPage workouts={appData.data.workouts} />}
+
       {screen === 'settings' && (
         <SettingsPage
           settings={appData.data.settings}

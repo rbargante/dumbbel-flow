@@ -1,7 +1,15 @@
-import { AppData, Program } from '@/data/exercises';
-import { Dumbbell, ChevronRight, Download, Share2, Play, Lock, RotateCcw } from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
-import { useInstallPrompt } from '@/hooks/useInstallPrompt';
+import { AppData, Program } from "@/data/exercises";
+import {
+  Dumbbell,
+  ChevronRight,
+  Download,
+  Share2,
+  Play,
+  Lock,
+  RotateCcw,
+} from "lucide-react";
+import { toast } from "@/hooks/use-toast";
+import { useInstallPrompt } from "@/hooks/useInstallPrompt";
 
 interface HomePageProps {
   data: AppData;
@@ -11,26 +19,44 @@ interface HomePageProps {
   hasActiveSession?: boolean;
 }
 
-export function HomePage({ data, onStartWorkout, onSelectProgram, onContinueLastWorkout, hasActiveSession }: HomePageProps) {
+export function HomePage({
+  data,
+  onStartWorkout,
+  onSelectProgram,
+  onContinueLastWorkout,
+  hasActiveSession,
+}: HomePageProps) {
   const { installPrompt, isInstalled, promptInstall } = useInstallPrompt();
 
   const handleShare = async () => {
     const shareData = {
-      title: 'Ricardo Routine',
-      text: 'Check out Ricardo Routine — offline workout tracker',
+      title: "Ricardo Routine",
+      text: "Check out Ricardo Routine — offline workout tracker",
       url: window.location.href,
     };
+
     if (navigator.share) {
-      try { await navigator.share(shareData); } catch {}
+      try {
+        await navigator.share(shareData);
+      } catch {}
     } else {
       await navigator.clipboard.writeText(window.location.href);
-      toast({ title: 'Link copied' });
+      toast({ title: "Link copied" });
     }
   };
 
-  const activeProgram = data.programs.find(p => p.isActive);
-  const mainPrograms = data.programs.filter(p => p.category === 'main' && !p.id.includes('longevity'));
-  const complementaryPrograms = data.programs.filter(p => p.category === 'complementary' && p.id !== 'balance_longevity');
+  const activeProgram = data.programs.find((p) => p.isActive);
+
+  const mainProgramsRaw = data.programs.filter(
+    (p) => p.category === "main" && !p.id.includes("longevity")
+  );
+
+  const complementaryPrograms = data.programs.filter(
+    (p) => p.category === "complementary" && p.id !== "balance_longevity"
+  );
+
+  // Keep original order (do NOT move active to top)
+  const mainPrograms = mainProgramsRaw;
 
   return (
     <div className="px-4 pt-10 pb-24 max-w-md mx-auto space-y-6">
@@ -61,8 +87,13 @@ export function HomePage({ data, onStartWorkout, onSelectProgram, onContinueLast
             </button>
           );
         }
+
         if (activeProgram) {
-          const nextDayLabel = activeProgram.workoutDays[data.nextDayIndex % activeProgram.workoutDays.length];
+          const nextDayLabel =
+            activeProgram.workoutDays[
+              data.nextDayIndex % activeProgram.workoutDays.length
+            ];
+
           return (
             <button
               onClick={onStartWorkout}
@@ -71,31 +102,29 @@ export function HomePage({ data, onStartWorkout, onSelectProgram, onContinueLast
               <div className="flex items-center gap-3">
                 <Play size={22} className="text-primary" fill="currentColor" />
                 <div className="text-left">
-                  <p className="font-black text-base text-foreground">START NEXT WORKOUT</p>
-                  <p className="text-xs text-muted-foreground">{activeProgram.name} — {nextDayLabel}</p>
+                  <p className="font-black text-base text-foreground">
+                    START NEXT WORKOUT
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {activeProgram.name} — {nextDayLabel}
+                  </p>
                 </div>
               </div>
               <ChevronRight size={20} className="text-primary" />
             </button>
           );
         }
+
         return null;
       })()}
 
-      {/* Active Plan */}
-      {activeProgram && (
-        <div className="bg-card rounded-xl p-4 border border-secondary">
-          <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold mb-1">Active Plan</p>
-          <p className="text-sm font-bold text-foreground">{activeProgram.name}</p>
-        </div>
-      )}
-
-      {/* Main Workouts — minimal list */}
+      {/* Main Workouts */}
       <div className="space-y-2">
         <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">
           Main Workouts
         </p>
-        <div className="bg-card rounded-xl border border-secondary divide-y divide-secondary">
+
+        <div className="bg-card rounded-xl border border-secondary divide-y divide-secondary overflow-hidden">
           {mainPrograms.map((program) => (
             <ProgramRow
               key={program.id}
@@ -106,7 +135,7 @@ export function HomePage({ data, onStartWorkout, onSelectProgram, onContinueLast
         </div>
       </div>
 
-      {/* Complementary — minimal list */}
+      {/* Complementary */}
       <div className="space-y-2">
         <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">
           Complementary
@@ -136,9 +165,12 @@ export function HomePage({ data, onStartWorkout, onSelectProgram, onContinueLast
             <Download size={18} /> Installed
           </div>
         ) : null}
+
         <button
           onClick={handleShare}
-          className={`${installPrompt || isInstalled ? 'flex-1' : 'w-full'} flex items-center justify-center gap-2 bg-card text-foreground font-bold py-3 rounded-xl active:scale-[0.98] transition-transform border border-secondary`}
+          className={`${
+            installPrompt || isInstalled ? "flex-1" : "w-full"
+          } flex items-center justify-center gap-2 bg-card text-foreground font-bold py-3 rounded-xl active:scale-[0.98] transition-transform border border-secondary`}
         >
           <Share2 size={18} /> Share
         </button>
@@ -147,36 +179,54 @@ export function HomePage({ data, onStartWorkout, onSelectProgram, onContinueLast
       {/* Workout count */}
       <div className="bg-card rounded-xl p-4 flex items-center justify-between">
         <p className="text-sm text-muted-foreground">Total workouts</p>
-        <span className="text-2xl font-black text-primary">{data.workouts.length}</span>
+        <span className="text-2xl font-black text-primary">
+          {data.workouts.length}
+        </span>
       </div>
     </div>
   );
 }
 
-/* ─── Minimal Program Row ─── */
-
-function ProgramRow({ program, onTap }: { program: Program; onTap: () => void }) {
+/* ─── Program Row ─── */
+function ProgramRow({
+  program,
+  onTap,
+}: {
+  program: Program;
+  onTap: () => void;
+}) {
   const isLocked = !!program.comingSoon;
+  const isActive = !!program.isActive;
 
   return (
     <button
       onClick={() => !isLocked && onTap()}
       disabled={isLocked}
-      className={`w-full flex items-center justify-between px-4 py-3.5 text-left transition-colors active:bg-secondary/50 ${
-        isLocked ? 'opacity-45' : ''
+      className={`relative w-full flex items-center justify-between px-4 py-3.5 text-left transition-colors active:bg-secondary/50 ${
+        isLocked ? "opacity-45" : ""
       }`}
     >
+      {/* Left red accent only for ACTIVE */}
+      {isActive && (
+        <span className="absolute left-0 top-0 h-full w-1 bg-primary" />
+      )}
+
       <div className="flex items-center gap-2 min-w-0">
-        <span className="text-sm font-semibold text-foreground truncate">{program.name}</span>
-        {program.isActive && (
+        <span className="text-sm font-semibold text-foreground truncate">
+          {program.name}
+        </span>
+
+        {isActive && (
           <span className="bg-primary text-primary-foreground text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0">
             ACTIVE
           </span>
         )}
+
         {isLocked && (
           <Lock size={14} className="text-muted-foreground shrink-0" />
         )}
       </div>
+
       <ChevronRight size={18} className="text-muted-foreground shrink-0" />
     </button>
   );
