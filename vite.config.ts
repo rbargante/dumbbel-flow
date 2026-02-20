@@ -4,8 +4,9 @@ import path from "path";
 import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
-export default defineConfig(({ mode }) => ({
-  // ✅ Using custom domain → base MUST be "/"
+export default defineConfig({
+  // ✅ Custom domain (ricardoroutine.online)
+  // Build assets served from root "/"
   base: "/",
 
   server: {
@@ -18,12 +19,12 @@ export default defineConfig(({ mode }) => ({
 
   plugins: [
     react(),
-    mode === "development" && componentTagger(),
-  ].filter(Boolean),
+    componentTagger(),
+  ],
 
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
   },
-}));
+});
