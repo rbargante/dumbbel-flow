@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { useInstallPrompt } from "@/hooks/useInstallPrompt";
+import { ScrollToTopButton } from "@/components/ScrollToTopButton";
 
 interface HomePageProps {
   data: AppData;
@@ -181,6 +182,9 @@ export function HomePage({
           {data.workouts.length}
         </span>
       </div>
+
+      {/* ✅ Scroll-to-top button */}
+      <ScrollToTopButton />
     </div>
   );
 }
