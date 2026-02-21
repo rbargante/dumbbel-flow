@@ -5,16 +5,28 @@ export function ScrollToTopButton() {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
+    const container = document.querySelector(".min-h-screen");
+
+    if (!container) return;
+
     const onScroll = () => {
-      setVisible(window.scrollY > 150);
+      setVisible(container.scrollTop > 200);
     };
+
+    container.addEventListener("scroll", onScroll);
     onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+
+    return () => container.removeEventListener("scroll", onScroll);
   }, []);
 
   const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    const container = document.querySelector(".min-h-screen");
+    if (!container) return;
+
+    container.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
   };
 
   if (!visible) return null;
@@ -23,7 +35,7 @@ export function ScrollToTopButton() {
     <button
       onClick={scrollToTop}
       aria-label="Scroll to top"
-      className="fixed bottom-24 right-4 z-50 rounded-full border border-secondary bg-card text-foreground shadow-lg p-3 active:scale-[0.98] transition-transform"
+      className="fixed bottom-24 right-4 z-50 rounded-full border border-secondary bg-card p-3 shadow-lg"
     >
       <ArrowUp size={18} />
     </button>
